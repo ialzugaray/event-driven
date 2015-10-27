@@ -1,0 +1,43 @@
+
+  /**
+  *
+  * @ingroup hardwareIO 
+  * \defgroup spinterface spinterface
+  * An interface between YARP and SpiNNaker using the EIEIO protocol
+  * Version:1.0
+  * \author  Arren Glover arren.glover@iit.it
+  * \n
+  * \copyright Released under the terms of the GNU GPL v2.0
+  * \section intro_sec Description
+  *
+  
+      Accepts events over a YARP port and sends them to a SpiNNaker board using the EIEIO protocol. Requires the EIEIO API installed.
+    
+  * \section parameters_sec Parameters     
+  
+  *- -- name : Specifies the stem name of ports created by the module.
+  * \section inputports_sec Input Ports
+  * 
+  *- /spinterface/vBottle:i [eventdriven::vBottle]  [default carrier:tcp]: 
+                Accepts the address events in the vBottle container,
+                that are converted into neuron IDs, manageable by a SpiNNaker board.
+            
+  *
+  
+  * \section outputports_sec Output Ports
+  * 
+  *- /spinterface/vBottle:o [eventdriven::vBottle]  [default carrier:tcp]: 
+                Outputs address events, converted from neuron IDs
+                processed by a SpiNNaker board.
+            
+  *
+  
+  *
+  * \section services_sec Services
+  * 
+  *
+  * 
+  *
+  *
+  **/
+

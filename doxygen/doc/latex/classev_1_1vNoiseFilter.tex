@@ -1,0 +1,51 @@
+\hypertarget{classev_1_1vNoiseFilter}{}\section{ev\+:\+:v\+Noise\+Filter Class Reference}
+\label{classev_1_1vNoiseFilter}\index{ev\+::v\+Noise\+Filter@{ev\+::v\+Noise\+Filter}}
+
+
+an efficient event-\/based salt and pepper filter  
+
+
+
+
+{\ttfamily \#include $<$v\+Filters.\+h$>$}
+
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\hyperlink{classev_1_1vNoiseFilter_a762260be3ee9eb0923fe08f906da975f}{v\+Noise\+Filter} ()\hypertarget{classev_1_1vNoiseFilter_a762260be3ee9eb0923fe08f906da975f}{}\label{classev_1_1vNoiseFilter_a762260be3ee9eb0923fe08f906da975f}
+
+\begin{DoxyCompactList}\small\item\em constructor \end{DoxyCompactList}\item 
+void \hyperlink{classev_1_1vNoiseFilter_af7c6cf000f7ed7193d160debac4e6879}{initialise} (double width, double height, int Tsize, unsigned int Ssize)\hypertarget{classev_1_1vNoiseFilter_af7c6cf000f7ed7193d160debac4e6879}{}\label{classev_1_1vNoiseFilter_af7c6cf000f7ed7193d160debac4e6879}
+
+\begin{DoxyCompactList}\small\item\em initialise the sensor size and the filter parameters. \end{DoxyCompactList}\item 
+bool \hyperlink{classev_1_1vNoiseFilter_a71ed5ded4f59d1c3180b0f5e5a021547}{check} (int x, int y, int p, int c, int ts)
+\begin{DoxyCompactList}\small\item\em classifies the event as noise or signal \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+an efficient event-\/based salt and pepper filter 
+
+\subsection{Member Function Documentation}
+\index{ev\+::v\+Noise\+Filter@{ev\+::v\+Noise\+Filter}!check@{check}}
+\index{check@{check}!ev\+::v\+Noise\+Filter@{ev\+::v\+Noise\+Filter}}
+\subsubsection[{\texorpdfstring{check(int x, int y, int p, int c, int ts)}{check(int x, int y, int p, int c, int ts)}}]{\setlength{\rightskip}{0pt plus 5cm}bool ev\+::v\+Noise\+Filter\+::check (
+\begin{DoxyParamCaption}
+\item[{int}]{x, }
+\item[{int}]{y, }
+\item[{int}]{p, }
+\item[{int}]{c, }
+\item[{int}]{ts}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [inline]}}\hypertarget{classev_1_1vNoiseFilter_a71ed5ded4f59d1c3180b0f5e5a021547}{}\label{classev_1_1vNoiseFilter_a71ed5ded4f59d1c3180b0f5e5a021547}
+
+
+classifies the event as noise or signal 
+
+\begin{DoxyReturn}{Returns}
+false if the event is noise 
+\end{DoxyReturn}
+
+
+The documentation for this class was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+/home/aglover/workspace/projects/event-\/driven/libraries/include/i\+Cub/eventdriven/v\+Filters.\+h\end{DoxyCompactItemize}

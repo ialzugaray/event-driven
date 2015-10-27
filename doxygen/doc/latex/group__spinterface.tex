@@ -1,0 +1,23 @@
+\hypertarget{group__spinterface}{}\section{spinterface}
+\label{group__spinterface}\index{spinterface@{spinterface}}
+An interface between Y\+A\+RP and Spi\+N\+Naker using the E\+I\+E\+IO protocol Version\+:1.\+0 \begin{DoxyAuthor}{Author}
+Arren Glover \href{mailto:arren.glover@iit.it}{\tt arren.\+glover@iit.\+it} ~\newline
+ 
+\end{DoxyAuthor}
+\begin{DoxyCopyright}{Copyright}
+Released under the terms of the G\+NU G\+PL v2.\+0 
+\end{DoxyCopyright}
+\hypertarget{group__zynqGrabber_intro_sec}{}\subsection{Description}\label{group__zynqGrabber_intro_sec}
+Accepts events over a Y\+A\+RP port and sends them to a Spi\+N\+Naker board using the E\+I\+E\+IO protocol. Requires the E\+I\+E\+IO A\+PI installed.\hypertarget{group__zynqGrabber_parameters_sec}{}\subsection{Parameters}\label{group__zynqGrabber_parameters_sec}
+
+\begin{DoxyItemize}
+\item -- name \+: Specifies the stem name of ports created by the module. 
+\end{DoxyItemize}\hypertarget{group__zynqGrabber_inputports_sec}{}\subsection{Input Ports}\label{group__zynqGrabber_inputports_sec}
+
+\begin{DoxyItemize}
+\item /spinterface/v\+Bottle\+:i \mbox{[}eventdriven\+::v\+Bottle\mbox{]} \mbox{[}default carrier\+:tcp\mbox{]}\+: Accepts the address events in the v\+Bottle container, that are converted into neuron I\+Ds, manageable by a Spi\+N\+Naker board.
+\end{DoxyItemize}\hypertarget{group__zynqGrabber_outputports_sec}{}\subsection{Output Ports}\label{group__zynqGrabber_outputports_sec}
+
+\begin{DoxyItemize}
+\item /spinterface/v\+Bottle\+:o \mbox{[}eventdriven\+::v\+Bottle\mbox{]} \mbox{[}default carrier\+:tcp\mbox{]}\+: Outputs address events, converted from neuron I\+Ds processed by a Spi\+N\+Naker board.
+\end{DoxyItemize}\hypertarget{group__zynqGrabber_services_sec}{}\subsection{Services}\label{group__zynqGrabber_services_sec}

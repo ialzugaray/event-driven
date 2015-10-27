@@ -1,0 +1,69 @@
+
+  /**
+  *
+  * @ingroup processing 
+  * \defgroup vParticleFilter vParticleFilter
+  * Event-driven Detection and Tracking using a Particle Filter
+  * Version:1.0
+  * \author  Arren Glover arren.glover@iit.it
+  * \n
+  * \copyright Released under the terms of the GNU GPL v2.0
+  * \section intro_sec Description
+  *
+  
+      The module detects and tracks a target (circles) using a particle filter.
+    
+  * \section parameters_sec Parameters     
+  
+  *- -- name : Modules name
+  *- -- threads : Number of computation threads
+  *- -- height : Sensor height in pixels
+  *- -- width : Sensor width in pixels
+  *- -- strict : Use strict port communication
+  *- -- realtime : Use the realtime implementation
+  *- -- adaptive : Use adaptive resampling
+  *- -- useroi : Use a region of interest
+  *- -- rParticles : Number of particles for left channel
+  *- -- lParticles : Number of particles for right channel
+  *- -- randoms : Number of random locations when resampling
+  *- -- rate : Update rate for non-realtime implementation
+  *- -- seed : Initial seed location for particles
+  *- -- obsthres : Minimum likelihood accepted
+  *- -- obsinlier : Thickness of inlier bins
+  *- -- obsoutlier : Thickness of outlier bins
+  *- -- variance : Variance for particle prediction (in pixels)
+  * \section inputports_sec Input Ports
+  * 
+  *- /vParticleFilter/vBottle:i [vBottle]  [default carrier:]: 
+     Accepts the address events from the camera
+     
+  *
+  
+  * \section outputports_sec Output Ports
+  * 
+  *- /vParticleFilter/vBottle:o [vBottle]  [default carrier:]: 
+     Outputs the detected circle positions as a vBottle of GaussianAE
+     
+  *
+  
+  *- /vParticleFilter/scope:o [yarp::os::Bottle]  [default carrier:]: 
+     Outputs debug information for use with yarpscope. Five variables
+     can be visualised indicating the delay of the module.
+     
+  *
+  
+  *- /vParticleFilter/debug:o [yarp::sig::Image]  [default carrier:]: 
+     Outputs a debugging images displaying events in the event-queue
+     as well as the particles and circle positions.
+     
+  *
+  
+  *
+  * \section services_sec Services
+  * 
+  *
+  * 
+  *
+  *
+  **/
+

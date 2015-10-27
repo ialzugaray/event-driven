@@ -1,0 +1,41 @@
+\hypertarget{group__vParticleFilter}{}\section{v\+Particle\+Filter}
+\label{group__vParticleFilter}\index{v\+Particle\+Filter@{v\+Particle\+Filter}}
+Event-\/driven Detection and Tracking using a Particle Filter Version\+:1.\+0 \begin{DoxyAuthor}{Author}
+Arren Glover \href{mailto:arren.glover@iit.it}{\tt arren.\+glover@iit.\+it} ~\newline
+ 
+\end{DoxyAuthor}
+\begin{DoxyCopyright}{Copyright}
+Released under the terms of the G\+NU G\+PL v2.\+0 
+\end{DoxyCopyright}
+\hypertarget{group__zynqGrabber_intro_sec}{}\subsection{Description}\label{group__zynqGrabber_intro_sec}
+The module detects and tracks a target (circles) using a particle filter.\hypertarget{group__zynqGrabber_parameters_sec}{}\subsection{Parameters}\label{group__zynqGrabber_parameters_sec}
+
+\begin{DoxyItemize}
+\item -- name \+: Modules name
+\item -- threads \+: Number of computation threads
+\item -- height \+: Sensor height in pixels
+\item -- width \+: Sensor width in pixels
+\item -- strict \+: Use strict port communication
+\item -- realtime \+: Use the realtime implementation
+\item -- adaptive \+: Use adaptive resampling
+\item -- useroi \+: Use a region of interest
+\item -- r\+Particles \+: Number of particles for left channel
+\item -- l\+Particles \+: Number of particles for right channel
+\item -- randoms \+: Number of random locations when resampling
+\item -- rate \+: Update rate for non-\/realtime implementation
+\item -- seed \+: Initial seed location for particles
+\item -- obsthres \+: Minimum likelihood accepted
+\item -- obsinlier \+: Thickness of inlier bins
+\item -- obsoutlier \+: Thickness of outlier bins
+\item -- variance \+: Variance for particle prediction (in pixels) 
+\end{DoxyItemize}\hypertarget{group__zynqGrabber_inputports_sec}{}\subsection{Input Ports}\label{group__zynqGrabber_inputports_sec}
+
+\begin{DoxyItemize}
+\item /v\+Particle\+Filter/v\+Bottle\+:i \mbox{[}v\+Bottle\mbox{]} \mbox{[}default carrier\+:\mbox{]}\+: Accepts the address events from the camera
+\end{DoxyItemize}\hypertarget{group__zynqGrabber_outputports_sec}{}\subsection{Output Ports}\label{group__zynqGrabber_outputports_sec}
+
+\begin{DoxyItemize}
+\item /v\+Particle\+Filter/v\+Bottle\+:o \mbox{[}v\+Bottle\mbox{]} \mbox{[}default carrier\+:\mbox{]}\+: Outputs the detected circle positions as a v\+Bottle of Gaussian\+AE
+\item /v\+Particle\+Filter/scope\+:o \mbox{[}yarp\+::os\+::\+Bottle\mbox{]} \mbox{[}default carrier\+:\mbox{]}\+: Outputs debug information for use with yarpscope. Five variables can be visualised indicating the delay of the module.
+\item /v\+Particle\+Filter/debug\+:o \mbox{[}yarp\+::sig\+::\+Image\mbox{]} \mbox{[}default carrier\+:\mbox{]}\+: Outputs a debugging images displaying events in the event-\/queue as well as the particles and circle positions.
+\end{DoxyItemize}\hypertarget{group__zynqGrabber_services_sec}{}\subsection{Services}\label{group__zynqGrabber_services_sec}

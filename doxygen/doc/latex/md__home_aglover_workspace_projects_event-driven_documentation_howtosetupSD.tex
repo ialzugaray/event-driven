@@ -1,0 +1,17 @@
+\subsection*{Set-\/up icub user}
+
+(as root) \char`\"{}groups icub\char`\"{} \char`\"{}visudo\char`\"{} add line\+: \char`\"{}icub A\+L\+L=(\+A\+L\+L\+:\+A\+L\+L) A\+L\+L\char`\"{} \char`\"{}mkdir /usr/local/src/robot\char`\"{} \char`\"{}chown icub /usr/local/src/robot\char`\"{}
+
+\subsection*{Set up repositories}
+
+(as icub) mkdir /usr/local/src/robot/icub-\/contrib-\/install \char`\"{}vim $\sim$/.\+bashrc\char`\"{} add lines\+: export R\+O\+B\+O\+T\+\_\+\+C\+O\+DE=/usr/local/src/robot export Y\+A\+R\+P\+\_\+\+D\+IR=\$\+R\+O\+B\+O\+T\+\_\+\+C\+O\+DE/yarp/build export I\+C\+U\+Bcontrib\+\_\+\+D\+IR=\$\+R\+O\+B\+O\+T\+\_\+\+C\+O\+DE/icub-\/contrib-\/install export Y\+A\+R\+P\+\_\+\+D\+A\+T\+A\+\_\+\+D\+I\+RS=\$\+Y\+A\+R\+P\+\_\+\+D\+IR/share/yarp\+:\$\+I\+C\+U\+Bcontrib\+\_\+\+D\+IR/share/\+I\+C\+U\+Bcontrib export P\+A\+TH=\$\+Y\+A\+R\+P\+\_\+\+D\+IR/bin\+:\$\+I\+C\+U\+Bcontrib\+\_\+\+D\+IR/bin\+:\$\+P\+A\+TH export E\+D\+\_\+\+R\+O\+OT=\$\+R\+O\+B\+O\+T\+\_\+\+C\+O\+DE/event-\/driven
+
+git clone yarp make only icub-\/contrib-\/common set install directory as \$\+I\+C\+U\+Bcontrib\+\_\+\+D\+IR make install event-\/driven (cmake should have found install directory as \$\+I\+C\+U\+Bcontrib\+\_\+\+D\+IR automatically) make install
+
+\subsection*{Set up device drivers}
+
+(as icub) \char`\"{}sudo usermod -\/a -\/\+G i2c icub\char`\"{} \char`\"{}sudo vim /lib/udev/rules.\+d/77-\/iit-\/hpu.\+rules\char`\"{} add lines\+: S\+U\+B\+S\+Y\+S\+T\+EM==\char`\"{}iit-\/hpu-\/class\char`\"{}, G\+R\+O\+UP=\char`\"{}i2c\char`\"{} \char`\"{}sudo vim /etc/rc.\+local\char`\"{} add lines\+: insmod \$\+P\+A\+T\+H\+\_\+\+T\+O\+\_\+\+H\+P\+U\+\_\+\+D\+R\+I\+V\+E\+R.\+ko ps=4096 \$\+P\+A\+T\+H\+\_\+\+T\+O\+\_\+\+Z\+Y\+N\+Q\+G\+R\+A\+B\+B\+ER --biaswrite $>$ /usr/local/src/robot/zynq\+Grabber.log
+
+\subsection*{Misc}
+
+check the device driver meta data \char`\"{}udevadm info -\/q all -\/a /dev/iit-\/hpu0\char`\"{} check the device driver parameters \char`\"{}cat /sys/module/iit\+\_\+hpucore\+\_\+dma/parameters/ps\char`\"{} 
