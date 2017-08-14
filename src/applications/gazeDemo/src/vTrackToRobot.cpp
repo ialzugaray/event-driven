@@ -197,6 +197,19 @@ bool vTrackToRobotModule::updateModule()
     yarp::sig::Vector leftTarget, rightTarget;
     inputPort.getTargets(leftTarget, rightTarget);
 
+    if(!leftTarget[3] && !rightTarget[3]) {
+        std::cout << "Weak signal from both cameras" << std::endl;
+        return true;
+    }
+    if(!leftTarget[3]) {
+        std::cout << "Weak signal from left camera" << std::endl;
+        return true;
+    }
+    if(!rightTarget[3]) {
+        std::cout << "Weak signal from right camera" << std::endl;
+        return true;
+    }
+
     //do our stereo target check
     if(std::abs(rightTarget[1] - leftTarget[1]) > yThresh) {
         //yWarning() << "Y values not consistent for target";
@@ -215,22 +228,24 @@ bool vTrackToRobotModule::updateModule()
     htimeout = yarp::os::Time::now();
 
     yarp::sig::Vector pleft = leftTarget.subVector(0, 1);
-    pleft[0] = res.width - 1 - pleft[0];
-    pleft[1] = res.height - 1 - pleft[1];
+    //pleft[0] = res.width - 1 - pleft[0];
+    //pleft[1] = res.height - 1 - pleft[1];
 
     yarp::sig::Vector pright = rightTarget.subVector(0, 1);
-    pright[0] = res.width - 1 - pright[0];
-    pright[1] = res.height - 1 - pright[1];
+    //pright[0] = res.width - 1 - pright[0];
+    //pright[1] = res.height - 1 - pright[1];
 
     if(!useDemoRedBall) {
-
 
         //yInfo() << "Doing gaze";
         yarp::sig::Vector tp;
         gazecontrol->triangulate3DPoint(pleft, pright, tp);
 
 
-        if(tp[0] < -0.20) {
+        //std::cout << tp.toString() << " " << std::abs(rightTarget[1] - leftTarget[1]) << " " << std::abs(rightTarget[2] - leftTarget[2]) << std::endl;
+        //tp[0] = -0.09;
+        if(tp[0] < -0.10) {
+            //gazecontrol->lookAtMonoPixel(0, pleft, 0.5);
             gazecontrol->lookAtStereoPixels(pleft, pright);
 
             if(armdriver.isValid()) {

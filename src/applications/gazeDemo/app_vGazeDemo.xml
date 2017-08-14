@@ -8,26 +8,44 @@
 </module>
 
 <module>
-    <name> vPepper </name>
-    <parameters> </parameters>
+    <name> vPreProcess </name>
+    <parameters> --flipy --split </parameters>
+    <node> icub-blade </node>
+</module>
+
+<!--<module>
+    <name> vParticleFilter </name>
+    <parameters> --threads 10 --variance 1.0 --lParticles 200 --rParticles 200 --obsinlier 1.0 --obsoutlier 6.0 --obsthresh 10.0 --adaptive </parameters>
+    <node> icub-blade </node>
+</module> -->
+
+<module>
+    <name> vDelayControl </name>
+    <parameters> --name /vpfL --rParticles 200 --obsthresh 0.20 --threads 8 --bins 64 --gain 0.01 </parameters>
     <node> icub-blade </node>
 </module>
 
 <module>
-    <name> vParticleFilter </name>
-    <parameters> --threads 10 --variance 1.0 --lParticles 200 --rParticles 200 --obsinlier 1.0 --obsoutlier 6.0 --obsthresh 10.0 --adaptive </parameters>
+    <name> vDelayControl </name>
+    <parameters> --name /vpfR --rParticles 200 --obsthresh 0.20 --threads 8 --bins 64 --gain 0.01 </parameters>
     <node> icub-blade </node>
 </module>
 
 <module>
     <name> yarpscope </name>
-    <parameters> --remote /vpf/scope:o --index "(0 1 2 3)" --color "(red blue green black)" </parameters>
+    <parameters> --remote /vpfR/scope:o --index "(0 1 2 3 4)" --color "(red blue green black yellow)" </parameters>
+    <node> icub24 </node>
+</module>
+
+<module>
+    <name> yarpscope </name>
+    <parameters> --remote /vpfL/scope:o --index "(0 1 2 3 4)" --color "(red blue green black yellow)" </parameters>
     <node> icub24 </node>
 </module>
 
 <module>
     <name> vFramer </name>
-    <parameters> --name /vFramer --displays "(0 /left (AE CLE ISO) 1 /right (AE CLE ISO))" --height 240 --width 304 --flip </parameters>
+    <parameters> --name /vFramer --displays "(0 /left (CIRC AE ISO) 1 /right (CIRC AE ISO))" </parameters>
     <node>icub24</node>
 </module>
 
@@ -44,8 +62,20 @@
 </module>
 
 <module>
+   <name> yarpview </name>
+   <parameters>--name /viewDebugL --x 30 --y 658 --w 608 --h 480 --synch </parameters>
+   <node>icub24</node>
+</module>
+
+<module>
+   <name> yarpview </name>
+   <parameters>--name /viewDebugR --x 658 --y 658 --w 608 --h 480 --synch </parameters>
+   <node>icub24</node>
+</module>
+
+<module>
     <name> vGazeDemo </name>
-    <parameters> --period 0.01 </parameters>
+    <parameters> --period 0.01 --start true </parameters>
     <node> icub24 </node>
 </module>
 
@@ -57,24 +87,42 @@
 
 <connection>
   <from>/zynqGrabber/vBottle:o</from>
-  <to>/vPepper/vBottle:i</to>
+  <to>/vPreProcess/vBottle:i</to>
   <protocol>udp</protocol>
 </connection>
 
 <connection>
-  <from>/vPepper/vBottle:o</from>
+  <from>/vPreProcess/left:o</from>
   <to>/vFramer/AE:i</to>
   <protocol>udp</protocol>
 </connection>
 
 <connection>
-  <from>/vPepper/vBottle:o</from>
-  <to>/vpf/vBottle:i</to>
+  <from>/vPreProcess/right:o</from>
+  <to>/vFramer/AE:i</to>
+  <protocol>udp</protocol>
+</connection>
+
+<connection>
+  <from>/vPreProcess/left:o</from>
+  <to>/vpfL/vBottle:i</to>
   <protocol>shmem</protocol>
 </connection>
 
 <connection>
-  <from>/vpf/vBottle:o</from>
+  <from>/vPreProcess/right:o</from>
+  <to>/vpfR/vBottle:i</to>
+  <protocol>shmem</protocol>
+</connection>
+
+<connection>
+  <from>/vpfL/vBottle:o</from>
+  <to>/vFramer/GAE:i</to>
+  <protocol>udp</protocol>
+</connection>
+
+<connection>
+  <from>/vpfR/vBottle:o</from>
   <to>/vFramer/GAE:i</to>
   <protocol>udp</protocol>
 </connection>
@@ -92,7 +140,25 @@
 </connection>
 
 <connection>
-  <from>/vpf/vBottle:o</from>
+  <from>/vpfL/debug:o</from>
+  <to>/viewDebugL</to>
+  <protocol>udp</protocol>
+</connection>
+
+<connection>
+  <from>/vpfR/debug:o</from>
+  <to>/viewDebugR</to>
+  <protocol>udp</protocol>
+</connection>
+
+<connection>
+  <from>/vpfL/vBottle:o</from>
+  <to>/vGazeDemo/vBottle:i</to>
+  <protocol>udp</protocol>
+</connection>
+
+<connection>
+  <from>/vpfR/vBottle:o</from>
   <to>/vGazeDemo/vBottle:i</to>
   <protocol>udp</protocol>
 </connection>
