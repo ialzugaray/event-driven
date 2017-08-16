@@ -168,7 +168,7 @@ vEgomotionThread::vEgomotionThread(std::string name, bool train, double thresh_m
             predictThreads[i]->start();
         }
 
-        outfile.open(folder + "events_ind.txt", std::ios_base::out);
+        outfile.open(folder + "events_indtest.txt", std::ios_base::out);
 }
 
 /**********************************************************/
@@ -247,13 +247,6 @@ void vEgomotionThread::run()
         ev::vQueue *q = 0;
         while(!q && !isStopping()) {
             q = allocatorCallback.getNextQ(yarpstamp);
-
-//            if( (yarp::os::Time::now() - tcm) > 0.01) {
-//                cmx = 0.0;
-//                cmy = 0.0;
-////                count = 0;
-            //                std::cout << indpSurf->getEventCount() << " " << cmx << " " << cmy << std::endl;
-            //            }
         }
         if(isStopping()) break;
 
@@ -275,12 +268,29 @@ void vEgomotionThread::run()
         encveltest[encvels.size()].index = -1;
         //        encveltest[encvels.size()].value = 0;
 
-        if(countNotMoving == encvels.size()) notmoving = true;
-
         yarp::sig::Vector pred_meanv(2);
         yarp::sig::Matrix pred_covv(2, 2);
-        float avgvx = 0.0;
-        float avgvy = 0.0;
+
+        if(countNotMoving == encvels.size()) {
+            notmoving = true;
+        }
+        else {
+            pred_meanv = predict_mean(encveltest);
+//            pred_covv = predict_cov(encveltest);
+//            pred_meanv(0) = 0;
+//            pred_meanv(1) = 0;
+            pred_covv(0, 0) = 1;
+            pred_covv(1, 0) = 0;
+            pred_covv(0, 1) = 0;
+            pred_covv(1, 1) = 1;
+        }
+
+//        static int counter = 0;
+//        if(counter++ > 100) {
+//            std::cout << allocatorCallback.queryDelayT() << std::endl;
+//            counter = 0;
+//        }
+
         double mah_dist;
         double cos_dist;
         bool isindependent;
@@ -294,11 +304,8 @@ void vEgomotionThread::run()
 
             //get the flow event
             auto ofp = ev::is_event<ev::FlowEvent>(*qi);
-            avgvx += ofp->vx;
-            avgvy += ofp->vy;
-
-            //            //testing
-            //            if(!train) {
+//            avgvx += ofp->vx;
+//            avgvy += ofp->vy;
 
             //predict egomotion using current encoder velocities
             //and the learnt models
@@ -306,40 +313,16 @@ void vEgomotionThread::run()
                 isindependent = true;
 //                indpSurf->fastAddEvent(*qi);
 
-//                //if it is independent motion, tag the event as independent
-//                auto inde = make_event<LabelledAE>(ofp);
-//                if(isindependent)
-//                    inde->ID = 2;
-//                else
-//                    //if not, tag it as corner
-//                    inde->ID = 1;
-
-//                outthread.pushevent(inde, yarpstamp);
-
             }
             else {
 
-//                //let the hread predict the mean vel
-//                int k = 0;
-//                while(true) {
+//                pred_meanv = predict_mean(encveltest);
+//                pred_covv = predict_cov(encveltest);
 
-//                    //assign a task to a thread that is not managing a task
-//                    if(predictThreads[k]->available()) {
-//                        predictThreads[k]->assignTask(ofp, encveltest, &yarpstamp);
-//                        break;
-//                    }
-//                    if(++k == nthreads)
-//                        k = 0;
-//                }
-//            }
-
-                pred_meanv = predict_mean(encveltest);
-                //                pred_covv = predict_cov(encveltest);
-
-                pred_covv(0, 0) = 1;
-                pred_covv(1, 0) = 0;
-                pred_covv(0, 1) = 0;
-                pred_covv(1, 1) = 1;
+//                pred_covv(0, 0) = 1;
+//                pred_covv(1, 0) = 0;
+//                pred_covv(0, 1) = 0;
+//                pred_covv(1, 1) = 1;
 
 ////                //velocity distance from known independently moving corners
 ////                double dx = ofp->x - cmx;
@@ -363,13 +346,14 @@ void vEgomotionThread::run()
 
                 //compute metric
                 isindependent = detect_independent(ofp, pred_meanv, pred_covv, mah_dist, cos_dist, weight);
+//                    isindependent = true;
 
 ////                if(weight > 1)
 ////                    std::cout << mah_dist/weight << " " << mah_dist << std::endl;
 
-                outfile << ofp->channel << " " << ofp->stamp << " " << ofp->polarity << " " << ofp->x << " " << ofp->y
-                        << " " << ofp->vx << " " << ofp->vy << " " << pred_meanv[0] << " " << pred_meanv[1] << " "
-                        << mah_dist << " " << cos_dist << " " << isindependent << std::endl;
+//                outfile << ofp->channel << " " << ofp->stamp << " " << ofp->polarity << " " << ofp->x << " " << ofp->y
+//                        << " " << ofp->vx << " " << ofp->vy << " " << pred_meanv[0] << " " << pred_meanv[1] << " "
+//                        << mah_dist << " " << cos_dist << " " << isindependent << std::endl;
 
             }
 
@@ -473,7 +457,7 @@ yarp::sig::Vector vEgomotionThread::predict_mean(svm_node *encvel)
     pred_mu_vx = svm_predict(mu_vx, encvel);
     pred_mu_vy = svm_predict(mu_vy, encvel);
 
-    mu[0] = pred_mu_vx;
+    mu[0] = -pred_mu_vx;
     mu[1] = -pred_mu_vy;
 
 //    std::cout << mu[0] << " " << mu[1] << std::endl;
