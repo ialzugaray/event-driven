@@ -172,8 +172,8 @@ void cluster::fitLine()
     //only output when the fitting error is small
     //TODO
     if(fiterr < 20.0) {
-        vel.first = -v[0]/v[2];
-        vel.second = -v[1]/v[2];
+        vel.first = v[1]/v[2];
+        vel.second = v[0]/v[2];
     }
 
 }
