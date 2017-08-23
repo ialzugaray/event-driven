@@ -51,11 +51,8 @@ private:
 //    ev::historicalSurface surfaceOfL;
 //    ev::historicalSurface surfaceOnR;
 //    ev::historicalSurface surfaceOfR;
-    ev::temporalSurface *surfaceOnL;
-    ev::temporalSurface *surfaceOfL;
-    ev::temporalSurface *surfaceOnR;
-    ev::temporalSurface *surfaceOfR;
-
+    ev::temporalSurface *surfaceleft;
+    ev::temporalSurface *surfaceright;
 
     //parameters
     int height;
@@ -71,15 +68,61 @@ private:
     double t1;
     double t2;
 
+    int circle3[16][2] =
+    {
+        {0, 3},
+        {1, 3},
+        {2, 2},
+        {3, 1},
+        {3, 0},
+        {3, -1},
+        {2, -2},
+        {1, -3},
+        {0, -3},
+        {-1, -3},
+        {-2, -2},
+        {-3, -1},
+        {-3, 0},
+        {-3, 1},
+        {-2, 2},
+        {-1, 3}
+    };
+
+    int circle4[20][2] =
+    {
+        {0, 4},
+        {1, 4},
+        {2, 3},
+        {3, 2},
+        {4, 1},
+        {4, 0},
+        {4, -1},
+        {3, -2},
+        {2, -3},
+        {1, -4},
+        {0, -4},
+        {-1, -4},
+        {-2, -3},
+        {-3, -2},
+        {-4, -1},
+        {-4, 0},
+        {-4, 1},
+        {-3, 2},
+        {-2, 3},
+        {-1, 4}
+    };
+
     std::ofstream outfile;
     ev::vtsHelper unwrapper;
 
     filters convolution;
     bool detectcorner(const ev::vQueue subsurf, int x, int y);
+    bool detectcornerfast(ev::temporalSurface *cSurf, ev::event<ev::AddressEvent> ae, int (&circle3_)[16][2], int (&circle4_)[20][2]);
 
 public:
 
-    vCornerCallback(int height, int width, int filterSize, int windowRad, double temporalsize, double sigma, int qlen, double thresh);
+    vCornerCallback(int height, int width, int filterSize, int windowRad, double temporalsize,
+                    double sigma, int qlen, double thresh);
 
     bool    open(const std::string moduleName, bool strictness = false);
     void    close();
