@@ -34,12 +34,12 @@ protected:
     //! event storage
     vQueue q;
 
-    //! for quick spatial accessing and surfacing
-    std::vector< std::vector < event<> > > spatial;
-
     //!retina size
     int width;
     int height;
+
+    //! for quick spatial accessing and surfacing
+    std::vector< std::vector < event<> > > spatial;
 
     //! active events
     int count;
@@ -113,6 +113,11 @@ public:
     vQueue getSurf_Clim(int c, int xl, int xh, int yl, int yh);
 
     void getSurfSorted(vQueue &fillq);
+
+    event<> getSpatial(int x, int y);
+    void getEventsOnCircle3(unsigned int (&patch3)[16], int x, int y, int (&circle)[16][2]);
+    void getEventsOnCircle4(unsigned int (&patch4)[20], int x, int y, int (&circle)[20][2]);
+
 
 };
 /******************************************************************************/

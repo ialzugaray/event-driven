@@ -96,7 +96,11 @@ void vSurface2::getSurf(ev::vQueue &qcopy, int xl, int xh, int yl, int yh)
 
     for(int y = yl; y <= yh; y++)
         for(int x = xl; x <= xh; x++)
-            if(spatial[y][x]) qcopy.push_back(spatial[y][x]);
+            if(spatial[y][x]) {
+                std::cout << "spatial " << x << " " << y << " " << spatial[y][x]->stamp << std::endl;
+                qcopy.push_back(spatial[y][x]);
+            }
+//    std::cout << std::endl;
 
 //    return qcopy;
 
@@ -241,6 +245,41 @@ event<> vSurface2::getMostRecent()
 {
     if(!q.size()) return NULL;
     return q.back();
+}
+
+event<> vSurface2::getSpatial(int x, int y)
+{
+//    if(!spatial[y][x]) return NULL;
+    return spatial[y][x];
+}
+
+void vSurface2::getEventsOnCircle3(unsigned int (&patch3)[16], int x, int y, int (&circle)[16][2])
+{
+
+    for (int i = 0; i < 16; i++) {
+        int xi = x + circle[i][0];
+        int yi = y + circle[i][1];
+        if(xi < 0 || yi < 0 || xi >= width || yi >= height)
+            continue;
+
+        if(spatial[yi][xi]) patch3[i] = spatial[yi][xi]->stamp;
+
+    }
+
+}
+
+void vSurface2::getEventsOnCircle4(unsigned int (&patch4)[20], int x, int y, int (&circle)[20][2])
+{
+
+    for (int i = 0; i < 20; i++) {
+        int xi = x + circle[i][0];
+        int yi = y + circle[i][1];
+        if(xi < 0 || yi < 0 || xi >= width || yi >= height)
+            continue;
+
+        if(spatial[yi][xi]) patch4[i] = spatial[yi][xi]->stamp;
+    }
+
 }
 
 /******************************************************************************/
