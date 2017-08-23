@@ -53,9 +53,10 @@ bool vCornerModule::configure(yarp::os::ResourceFinder &rf)
     }
     else {
         cornercallback = 0;
-        cornerthread = new vCornerThread(height, width, moduleName, strict, qlen, temporalsize,
-                                         windowRad, sobelsize, sigma, thresh, nthreads,
-                                         delayV, delayT, allToSurface);
+//        cornerthread = new vCornerThread(height, width, moduleName, strict, qlen, temporalsize,
+//                                         windowRad, sobelsize, sigma, thresh, nthreads,
+//                                         delayV, delayT, allToSurface);
+        cornerthread = new vCornerThread(height, width, moduleName, strict, nthreads);
         if(!cornerthread->start())
             return false;
     }

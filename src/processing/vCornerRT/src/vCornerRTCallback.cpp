@@ -42,22 +42,18 @@ vCornerCallback::vCornerCallback(int height, int width, int sobelsize, int windo
     this->prevstamp = 0;
     this->t1 = this->t2 = 0;// = yarp::os::Time::now();
 
-    int gaussiansize = 2*windowRad + 2 - sobelsize;
-    convolution.configure(sobelsize, gaussiansize);
-    convolution.setSobelFilters();
-    convolution.setGaussianFilter(sigma);
+//    int gaussiansize = 2*windowRad + 2 - sobelsize;
+//    convolution.configure(sobelsize, gaussiansize);
+//    convolution.setSobelFilters();
+//    convolution.setGaussianFilter(sigma);
 
-    std::cout << "Using a " << sobelsize << "x" << sobelsize << " filter ";
-    std::cout << "and a " << 2*windowRad + 1 << "x" << 2*windowRad + 1 << " spatial window" << std::endl;
+//    std::cout << "Using a " << sobelsize << "x" << sobelsize << " filter ";
+//    std::cout << "and a " << 2*windowRad + 1 << "x" << 2*windowRad + 1 << " spatial window" << std::endl;
 
     //create surface representations
     std::cout << "Creating surfaces..." << std::endl;
-//    surfaceOfR.initialise(height, width);
-//    surfaceOnR.initialise(height, width);
-//    surfaceOfL.initialise(height, width);
-//    surfaceOnL.initialise(height, width);
-    surfaceleft = new temporalSurface(width, height, this->temporalsize);
-    surfaceright = new temporalSurface(width, height, this->temporalsize);
+    surfaceleft = new temporalSurface(width, height); //, this->temporalsize);
+    surfaceright = new temporalSurface(width, height); //, this->temporalsize);
 
 }
 /**********************************************************/
@@ -139,7 +135,11 @@ void vCornerCallback::onRead(ev::vBottle &bot)
         //            outfile << ae->channel << " " << unwrapper(ae->stamp) << " " << ae->polarity << " "
         //                    << ae->x << " " << ae->y << " " << std::setprecision(15) << st.getTime() << " ";
 
-        isc = detectcornerfast(cSurf, ae, circle3, circle4);
+        unsigned int patch3[16];
+        unsigned int patch4[20];
+        cSurf->getEventsOnCircle3(patch3, ae->x, ae->y, circle3);
+        cSurf->getEventsOnCircle4(patch4, ae->x, ae->y, circle4);
+        isc = detectcornerfast(patch3, patch4);
 
         //if it's a corner, add it to the output bottle
         if(isc) {
@@ -205,73 +205,22 @@ bool vCornerCallback::detectcorner(const vQueue subsurf, int x, int y)
 }
 
 /**********************************************************/
-bool vCornerCallback::detectcornerfast(ev::temporalSurface *cSurf, ev::event<ev::AddressEvent> ae,
-                                       int (&circle3_)[16][2], int (&circle4_)[20][2])
+bool vCornerCallback::detectcornerfast(unsigned int patch3[16], unsigned int patch4[20])
 {
     bool found_streak = false;
-    vQueue evonSurf;
 
-    for (int i = 0; i < 16; i++)
+    for(int i = 0; i < 16; i++)
     {
+        unsigned int ti = patch3[i];
+
         for (int streak_size = 3; streak_size <= 6; streak_size++)
         {
-            // check that streak event is larger than neighbor
-            int xi = ae->x + circle3_[i][0];
-            int yi = ae->y + circle3_[i][1];
-            cSurf->getSurf(evonSurf, xi, yi, 0);
-            double tsi;
-            if(evonSurf.size())
-                tsi = evonSurf[0]->stamp;
-            else
-                tsi = 0;
-
-            int xe = ae->x + circle3_[(i-1+16)%16][0];
-            int ye = ae->y + circle3_[(i-1+16)%16][1];
-
-            cSurf->getSurf(evonSurf, xe, ye, 0);
-            double tse;
-            if(evonSurf.size())
-                tse = evonSurf[0]->stamp;
-            else
-                tse = 0;
-
-            if(tsi < tse)
-                continue;
-
-            // check that streak event is larger than neighbor
-            int xsi = ae->x + circle3_[(i+streak_size-1)%16][0];
-            int ysi = ae->y + circle3_[(i+streak_size-1)%16][1];
-            cSurf->getSurf(evonSurf, xsi, ysi, 0);
-            double tssi;
-            if(evonSurf.size())
-                tssi = evonSurf[0]->stamp;
-            else
-                tssi = 0;
-
-            int xse = ae->x + circle3_[(i+streak_size)%16][0];
-            int yse = ae->y + circle3_[(i+streak_size)%16][1];
-            cSurf->getSurf(evonSurf, xse, yse, 0);
-            double tsse;
-            if(evonSurf.size())
-                tsse = evonSurf[0]->stamp;
-            else
-                tsse = 0;
-
-            if(tssi < tsse)
-                continue;
-
-            double min_t = tsi;
+            //find the minimum timestamp in the current arc
+            unsigned int min_t = ti;
             for (int j = 1; j < streak_size; j++)
             {
-                int xj = ae->x + circle3_[(i+j)%16][0];
-                int yj = ae->y + circle3_[(i+j)%16][1];
-                cSurf->getSurf(evonSurf, xj, yj, 0);
-
-                double tj;
-                if(evonSurf.size())
-                    tj = evonSurf[0]->stamp;
-                else
-                    tj = 0;
+                int curri = (i+j)%16;
+                unsigned int tj = patch3[curri];
 
                 if (tj < min_t)
                     min_t = tj;
@@ -280,15 +229,8 @@ bool vCornerCallback::detectcornerfast(ev::temporalSurface *cSurf, ev::event<ev:
             bool did_break = false;
             for (int j = streak_size; j < 16; j++)
             {
-                int xj = ae->x + circle3_[(i+j)%16][0];
-                int yj = ae->y + circle3_[(i+j)%16][1];
-                cSurf->getSurf(evonSurf, xj, yj, 0);
-
-                double tj;
-                if(evonSurf.size())
-                    tj = evonSurf[0]->stamp;
-                else
-                    tj = 0;
+                int curri = (i+j)%16;
+                unsigned int tj = patch3[curri];
 
                 if (tj >= min_t)
                 {
@@ -297,7 +239,7 @@ bool vCornerCallback::detectcornerfast(ev::temporalSurface *cSurf, ev::event<ev:
                 }
             }
 
-            if(!did_break)
+            if(did_break == false)
             {
                 found_streak = true;
                 break;
@@ -310,107 +252,52 @@ bool vCornerCallback::detectcornerfast(ev::temporalSurface *cSurf, ev::event<ev:
         }
     }
 
-//    if (found_streak)
-//    {
-//        found_streak = false;
-//        for (int i = 0; i < 20; i++)
-//        {
-//            for (int streak_size = 4; streak_size<=8; streak_size++)
-//            {
-//                // check that streak event is larger than neighbor
-//                int xi = ae->x + circle4_[i][0];
-//                int yi = ae->y + circle4_[i][1];
-//                cSurf->getSurf(evonSurf, xi, yi, 0);
-//                double tsi;
-//                if(evonSurf.size())
-//                    tsi = evonSurf[0]->stamp;
-//                else
-//                    tsi = 0;
+    if (found_streak)
+    {
+        found_streak = false;
+        for (int i = 0; i < 20; i++)
+        {
+            unsigned int ti = patch4[i];
 
-//                int xe = ae->x + circle4_[(i-1+20)%20][0];
-//                int ye = ae->y + circle4_[(i-1+20)%20][1];
+            for (int streak_size = 4; streak_size<= 8; streak_size++)
+            {
 
-//                cSurf->getSurf(evonSurf, xe, ye, 0);
-//                double tse;
-//                if(evonSurf.size())
-//                    tse = evonSurf[0]->stamp;
-//                else
-//                    tse = 0;
+                unsigned int min_t = ti;
+                for (int j = 1; j < streak_size; j++)
+                {
+                    int curri = (i+j)%20;
+                    unsigned int tj = patch4[curri];
 
-//                if (tsi < tse)
-//                    continue;
+                    if (tj < min_t)
+                        min_t = tj;
+                }
 
-//                // check that streak event is larger than neighbor
-//                int xsi = ae->x + circle4_[(i+streak_size-1)%20][0];
-//                int ysi = ae->y + circle4_[(i+streak_size-1)%20][1];
-//                cSurf->getSurf(evonSurf, xsi, ysi, 0);
-//                double tssi;
-//                if(evonSurf.size())
-//                    tssi = evonSurf[0]->stamp;
-//                else
-//                    tssi = 0;
+                bool did_break = false;
+                for (int j = streak_size; j < 20; j++)
+                {
 
-//                int xse = ae->x + circle4_[(i+streak_size)%20][0];
-//                int yse = ae->y + circle4_[(i+streak_size)%20][1];
-//                cSurf->getSurf(evonSurf, xse, yse, 0);
-//                double tsse;
-//                if(evonSurf.size())
-//                    tsse = evonSurf[0]->stamp;
-//                else
-//                    tsse = 0;
+                    int curri = (i+j)%20;
+                    unsigned int tj = patch4[curri];
 
-//                if (tssi < tsse)
-//                    continue;
+                    if (tj >= min_t)
+                    {
+                        did_break = true;
+                        break;
+                    }
+                }
 
-//                double min_t = evonSurf[0]->stamp;
-//                for (int j=1; j<streak_size; j++)
-//                {
-//                    int xj = ae->x + circle4_[(i+j)%20][0];
-//                    int yj = ae->y + circle4_[(i+j)%20][1];
-//                    cSurf->getSurf(evonSurf, xj, yj, 0);
-
-//                    double tj;
-//                    if(evonSurf.size())
-//                        tj = evonSurf[0]->stamp;
-//                    else
-//                        tj = 0;
-
-//                    if (tj < min_t)
-//                        min_t = tj;
-//                }
-
-//                bool did_break = false;
-//                for (int j = streak_size; j < 20; j++)
-//                {
-//                    int xj = ae->x + circle4_[(i+j)%20][0];
-//                    int yj = ae->y + circle4_[(i+j)%20][1];
-//                    cSurf->getSurf(evonSurf, xj, yj, 0);
-
-//                    double tj;
-//                    if(evonSurf.size())
-//                        tj = evonSurf[0]->stamp;
-//                    else
-//                        tj = 0;
-
-//                    if (tj >= min_t)
-//                    {
-//                        did_break = true;
-//                        break;
-//                    }
-//                }
-
-//                if (!did_break)
-//                {
-//                    found_streak = true;
-//                    break;
-//                }
-//            }
-//            if (found_streak)
-//            {
-//                break;
-//            }
-//        }
-//    }
+                if (!did_break)
+                {
+                    found_streak = true;
+                    break;
+                }
+            }
+            if (found_streak)
+            {
+                break;
+            }
+        }
+    }
 
     return found_streak;
 

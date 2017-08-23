@@ -44,13 +44,7 @@ private:
     yarp::os::BufferedPort<ev::vBottle> outPort;
     yarp::os::BufferedPort<yarp::os::Bottle> debugPort;
 
-    ev::vNoiseFilter spfilter;   
-
     //data structures
-//    ev::historicalSurface surfaceOnL;
-//    ev::historicalSurface surfaceOfL;
-//    ev::historicalSurface surfaceOnR;
-//    ev::historicalSurface surfaceOfR;
     ev::temporalSurface *surfaceleft;
     ev::temporalSurface *surfaceright;
 
@@ -117,7 +111,7 @@ private:
 
     filters convolution;
     bool detectcorner(const ev::vQueue subsurf, int x, int y);
-    bool detectcornerfast(ev::temporalSurface *cSurf, ev::event<ev::AddressEvent> ae, int (&circle3_)[16][2], int (&circle4_)[20][2]);
+    bool detectcornerfast(unsigned int patch3[16], unsigned int patch4[20]);
 
 public:
 

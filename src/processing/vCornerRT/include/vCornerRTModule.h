@@ -31,6 +31,7 @@
 #include <vCornerRTModule.h>
 #include <vCornerRTCallback.h>
 #include <vCornerRTThread.h>
+#include <vCornerRTThread_FAST.h>
 
 class vCornerModule : public yarp::os::RFModule
 {
