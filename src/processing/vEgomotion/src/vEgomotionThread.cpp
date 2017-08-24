@@ -374,7 +374,7 @@ void vEgomotionThread::run()
                 scorebottleout.addDouble(pred_meanv[1]);
                 scorebottleout.addDouble(pred_covv(0, 0));
                 scorebottleout.addDouble(pred_covv(1, 1));
-                scorebottleout.addDouble(cos_dist);
+                scorebottleout.addDouble(mah_dist);
                 scorebottleout.addDouble(ofp->vx);
                 scorebottleout.addDouble(ofp->vy);
                 debugPort.write();
@@ -438,7 +438,7 @@ bool vEgomotionThread::detect_independent(event<FlowEvent> ofe, yarp::sig::Vecto
 
 //    std::cout << pred_meanv[0] << " " << pred_meanv[1] << " " << flowvel[0] << " " << flowvel[1] << " " << mahdist << " " << threshold << std::endl;
 
-    return (mahdist > thresh_mag | cosdist < thresh_angle);
+    return (mahdist > thresh_mag); // | cosdist < thresh_angle);
 }
 
 /**********************************************************/
@@ -457,8 +457,8 @@ yarp::sig::Vector vEgomotionThread::predict_mean(svm_node *encvel)
     pred_mu_vx = svm_predict(mu_vx, encvel);
     pred_mu_vy = svm_predict(mu_vy, encvel);
 
-    mu[0] = -pred_mu_vx;
-    mu[1] = -pred_mu_vy;
+    mu[0] = -pred_mu_vy;
+    mu[1] = -pred_mu_vx;
 
 //    std::cout << mu[0] << " " << mu[1] << std::endl;
 
