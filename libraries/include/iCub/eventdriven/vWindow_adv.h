@@ -44,6 +44,8 @@ protected:
     //! active events
     int count;
 
+    ev::vtsHelper unwrapper;
+
 public:
 
     ///

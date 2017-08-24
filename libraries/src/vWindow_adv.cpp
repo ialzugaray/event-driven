@@ -96,11 +96,7 @@ void vSurface2::getSurf(ev::vQueue &qcopy, int xl, int xh, int yl, int yh)
 
     for(int y = yl; y <= yh; y++)
         for(int x = xl; x <= xh; x++)
-            if(spatial[y][x]) {
-                std::cout << "spatial " << x << " " << y << " " << spatial[y][x]->stamp << std::endl;
-                qcopy.push_back(spatial[y][x]);
-            }
-//    std::cout << std::endl;
+            if(spatial[y][x]) qcopy.push_back(spatial[y][x]);
 
 //    return qcopy;
 
@@ -263,8 +259,10 @@ void vSurface2::getEventsOnCircle3(unsigned int (&patch3)[16], int x, int y, int
             continue;
 
         if(spatial[yi][xi]) patch3[i] = spatial[yi][xi]->stamp;
+//        std::cout << i << " " << patch3[i] << std::endl;
 
     }
+//    std::cout << std::endl;
 
 }
 
