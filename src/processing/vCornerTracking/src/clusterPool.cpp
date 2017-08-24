@@ -45,6 +45,7 @@ std::pair <double, double> clusterPool::update(ev::event<ev::LabelledAE> evt, do
     else {
 
         //compute the distance from the current event to each cluster
+//        std::cout << pool.size() << std::endl;
         for(unsigned int i = 0; i < pool.size(); i++) {
             dist = pool[i].dist2event(evt);
 
@@ -61,15 +62,10 @@ std::pair <double, double> clusterPool::update(ev::event<ev::LabelledAE> evt, do
             //add event to the minimum distance cluster
             if(pool[clusterID].addEvent(evt, currt)) {
                 //start tracking cluster
-//                std::cout << clusterID << " " << pool[clusterID].getClusterSize() << " " << currt << std::endl;
                 if(pool[clusterID].getClusterSize() > minevts) { // && pool[clusterID].getSpatialDist(evt) > 3.0) {
                     pool[clusterID].fitLine();
-//                    std::cout << evt->x << " " << evt->y << " " << clusterID << " " << pool[clusterID].getClusterSize() << " " << pool[clusterID].getFitErr() << std::endl;
                     clustervel.first = pool[clusterID].getVx() * 1000000.0;
                     clustervel.second = pool[clusterID].getVy() * 1000000.0;
-//                    std::cout << clusterID << " cluster is moving at " << clustervel.first << " " << clustervel.second
-//                              << " with " << pool[clusterID].getClusterSize() << " and moved " << pool[clusterID].getSpatialDist(evt)
-//                              << " last event: " << evt->x << " " << evt->y << std::endl;
                 }
             }
 
@@ -78,19 +74,15 @@ std::pair <double, double> clusterPool::update(ev::event<ev::LabelledAE> evt, do
             //create new cluster
             createNewCluster(evt, currt);
             clusterID = pool.size() - 1;
-            //        std::cout << "creating new cluster " << clusterID << std::endl;
         }
 
         //check for old clusters
         for(unsigned int i = 0; i < pool.size(); i++) {
             if( (currt - pool[i].getLastUpdate()) > trefresh) {
-//                std::cout << " killing cluster " << i << " " << currt << " " << pool[i].getLastUpdate() << std::endl;
                 killOldCluster(i);
             }
         }
-
     }
-//    std::cout << std::endl;
 
     //return the velocity of the current cluster
     return clustervel;

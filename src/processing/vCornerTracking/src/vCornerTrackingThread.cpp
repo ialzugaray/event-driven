@@ -72,9 +72,10 @@ void vCornerTrackingThread::run()
         if(isStopping()) break;
 
         std::pair <double, double> vel;
-        double vx = 0.0;
-        double vy = 0.0;
-        int count = 0;
+//        double vx = 0.0;
+//        double vy = 0.0;
+//        int count = 0;
+
         for(ev::vQueue::iterator qi = q->begin(); qi != q->end(); qi++) {
 
             //current corner event
@@ -102,19 +103,19 @@ void vCornerTrackingThread::run()
                 if(debugPort.getOutputCount()) {
                     yarp::os::Bottle &distbottleout = debugPort.prepare();
                     distbottleout.clear();
-                    distbottleout.addDouble(vel.first);
-                    distbottleout.addDouble(vel.second);
+                    distbottleout.addDouble(allocatorCallback.queryDelayN());
+//                    distbottleout.addDouble(deltat);
                     debugPort.write();
                 }
 
-                vx += vel.first;
-                vy += vel.second;
-                count++;
+//                vx += vel.first;
+//                vy += vel.second;
+//                count++;
             }
         }
 
-        vx = vx / count;
-        vy = vy / count;
+//        vx = vx / count;
+//        vy = vy / count;
 
         allocatorCallback.scrapQ();
 

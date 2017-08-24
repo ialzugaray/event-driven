@@ -38,7 +38,7 @@ bool vCornerTrackingModule::configure(yarp::os::ResourceFinder &rf)
     double trefresh = rf.check("trefresh", yarp::os::Value(1.0)).asDouble();
     int maxsize = rf.check("maxsize", yarp::os::Value(15)).asInt();
     int minevts = rf.check("minevts", yarp::os::Value(3)).asInt();
-    bool callback = rf.check("callback", yarp::os::Value(true)).asBool();
+    bool callback = rf.check("callback", yarp::os::Value(false)).asBool();
 
     /* create the thread and pass pointers to the module parameters */
     if(callback) {
