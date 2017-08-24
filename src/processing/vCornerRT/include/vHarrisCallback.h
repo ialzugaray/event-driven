@@ -20,8 +20,8 @@
 /// \ingroup Modules
 /// \brief detects corner events using the Harris method
 
-#ifndef __VCORNERCALLBACK__
-#define __VCORNERCALLBACK__
+#ifndef __VHARRISCALLBACK__
+#define __VHARRISCALLBACK__
 
 #include <yarp/os/all.h>
 #include <yarp/sig/all.h>
@@ -31,10 +31,9 @@
 #include <filters.h>
 #include <fstream>
 #include <math.h>
-#include <vCornerRTCallback.h>
 #include <iomanip>
 
-class vCornerCallback : public yarp::os::BufferedPort<ev::vBottle>
+class vHarrisCallback : public yarp::os::BufferedPort<ev::vBottle>
 {
 private:
 
@@ -56,67 +55,18 @@ private:
     int windowRad;
     double thresh;
 
-    //for synchronization between adding events and processing
-    double cpudelay;
-    int prevstamp;
-    double t1;
-    double t2;
+    double tout;
 
-    int circle3[16][2] =
-    {
-        {0, 3},
-        {1, 3},
-        {2, 2},
-        {3, 1},
-        {3, 0},
-        {3, -1},
-        {2, -2},
-        {1, -3},
-        {0, -3},
-        {-1, -3},
-        {-2, -2},
-        {-3, -1},
-        {-3, 0},
-        {-3, 1},
-        {-2, 2},
-        {-1, 3}
-    };
-
-    int circle4[20][2] =
-    {
-        {0, 4},
-        {1, 4},
-        {2, 3},
-        {3, 2},
-        {4, 1},
-        {4, 0},
-        {4, -1},
-        {3, -2},
-        {2, -3},
-        {1, -4},
-        {0, -4},
-        {-1, -4},
-        {-2, -3},
-        {-3, -2},
-        {-4, -1},
-        {-4, 0},
-        {-4, 1},
-        {-3, 2},
-        {-2, 3},
-        {-1, 4}
-    };
-
-    std::ofstream outfile;
-    ev::vtsHelper unwrapper;
+//    std::ofstream outfile;
+//    ev::vtsHelper unwrapper;
 
     filters convolution;
     bool detectcorner(const ev::vQueue subsurf, int x, int y);
-    bool detectcornerfast(unsigned int patch3[16], unsigned int patch4[20]);
 
 public:
 
-    vCornerCallback(int height, int width, int filterSize, int windowRad, double temporalsize,
-                    double sigma, int qlen, double thresh);
+    vHarrisCallback(int height, int width, double temporalsize, int qlen,
+                    int filterSize, int windowRad, double sigma, double thresh);
 
     bool    open(const std::string moduleName, bool strictness = false);
     void    close();

@@ -15,13 +15,15 @@
  * Public License for more details
  */
 
-#include "vCornerRTCallback.h"
+#include "vHarrisCallback.h"
 
 using namespace ev;
 
-vCornerCallback::vCornerCallback(int height, int width, int sobelsize, int windowRad, double temporalsize,
-                                 double sigma, int qlen, double thresh)
+vHarrisCallback::vHarrisCallback(int height, int width, double temporalsize, int qlen,
+                                 int sobelsize, int windowRad, double sigma, double thresh)
 {
+    std::cout << "Using HARRIS implementation..." << std::endl;
+
     this->height = height;
     this->width = width;
     this->windowRad = windowRad;
@@ -38,26 +40,24 @@ vCornerCallback::vCornerCallback(int height, int width, int sobelsize, int windo
     this->qlen = qlen;
     this->thresh = thresh;
 
-    this->cpudelay = 0.005;
-    this->prevstamp = 0;
-    this->t1 = this->t2 = 0;// = yarp::os::Time::now();
+    int gaussiansize = 2*windowRad + 2 - sobelsize;
+    convolution.configure(sobelsize, gaussiansize);
+    convolution.setSobelFilters();
+    convolution.setGaussianFilter(sigma);
 
-//    int gaussiansize = 2*windowRad + 2 - sobelsize;
-//    convolution.configure(sobelsize, gaussiansize);
-//    convolution.setSobelFilters();
-//    convolution.setGaussianFilter(sigma);
-
-//    std::cout << "Using a " << sobelsize << "x" << sobelsize << " filter ";
-//    std::cout << "and a " << 2*windowRad + 1 << "x" << 2*windowRad + 1 << " spatial window" << std::endl;
+    std::cout << "Using a " << sobelsize << "x" << sobelsize << " filter ";
+    std::cout << "and a " << 2*windowRad + 1 << "x" << 2*windowRad + 1 << " spatial window" << std::endl;
 
     //create surface representations
     std::cout << "Creating surfaces..." << std::endl;
     surfaceleft = new temporalSurface(width, height); //, this->temporalsize);
-    surfaceright = new temporalSurface(width, height); //, this->temporalsize);
+    surfaceright = new temporalSurface(width, height); // , this->temporalsize);
+
+    this->tout = 0;
 
 }
 /**********************************************************/
-bool vCornerCallback::open(const std::string moduleName, bool strictness)
+bool vHarrisCallback::open(const std::string moduleName, bool strictness)
 {
     this->strictness = strictness;
     if(strictness) {
@@ -76,21 +76,21 @@ bool vCornerCallback::open(const std::string moduleName, bool strictness)
     std::string debugPortName = "/" + moduleName + "/score:o";
     bool check3 = debugPort.open(debugPortName);
 
-    outfile.open("/home/vvasco/dev/egomotion/affine/testing data/corners.txt");
+//    outfile.open("/home/vvasco/dev/egomotion/affine/testing data/corners.txt");
 
     return check1 && check2 && check3;
 
 }
 
 /**********************************************************/
-void vCornerCallback::close()
+void vHarrisCallback::close()
 {
     //close ports
     debugPort.close();
     outPort.close();
     yarp::os::BufferedPort<ev::vBottle>::close();
 
-    outfile.close();
+//    outfile.close();
 
     delete surfaceleft;
     delete surfaceright;
@@ -98,7 +98,7 @@ void vCornerCallback::close()
 }
 
 /**********************************************************/
-void vCornerCallback::interrupt()
+void vHarrisCallback::interrupt()
 {
     //pass on the interrupt call to everything needed
     debugPort.interrupt();
@@ -108,7 +108,7 @@ void vCornerCallback::interrupt()
 }
 
 /**********************************************************/
-void vCornerCallback::onRead(ev::vBottle &bot)
+void vHarrisCallback::onRead(ev::vBottle &bot)
 {
     yarp::os::Stamp st;
     ev::vBottle fillerbottle;
@@ -126,20 +126,14 @@ void vCornerCallback::onRead(ev::vBottle &bot)
             cSurf = surfaceright;
         cSurf->fastAddEvent(*qi);
 
-        //            vQueue subsurf;
-        ////            cSurf->getSurfaceN(subsurf, 0, qlen, windowRad, ae->x, ae->y);
-        //            cSurf->getSurf(subsurf, windowRad);
-        //            isc = detectcorner(subsurf, ae->x, ae->y);
+        vQueue subsurf;
+//        cSurf->getSurf(subsurf, windowRad);
+        subsurf = cSurf->getSurf_Clim(qlen, ae->x, ae->y, windowRad);
+        isc = detectcorner(subsurf, ae->x, ae->y);
 
         //            this->getEnvelope(st);
         //            outfile << ae->channel << " " << unwrapper(ae->stamp) << " " << ae->polarity << " "
         //                    << ae->x << " " << ae->y << " " << std::setprecision(15) << st.getTime() << " ";
-
-        unsigned int patch3[16];
-        unsigned int patch4[20];
-        cSurf->getEventsOnCircle3(patch3, ae->x, ae->y, circle3);
-        cSurf->getEventsOnCircle4(patch4, ae->x, ae->y, circle4);
-        isc = detectcornerfast(patch3, patch4);
 
         //if it's a corner, add it to the output bottle
         if(isc) {
@@ -155,13 +149,13 @@ void vCornerCallback::onRead(ev::vBottle &bot)
         if(debugPort.getOutputCount()) {
             yarp::os::Bottle &scorebottleout = debugPort.prepare();
             scorebottleout.clear();
-            scorebottleout.addDouble(cpudelay);
+//            scorebottleout.addDouble(cpudelay);
             debugPort.write();
         }
 
     }
 
-    if( (yarp::os::Time::now() - t2) > 0.001 && fillerbottle.size() ) {
+    if( (yarp::os::Time::now() - tout) > 0.001 && fillerbottle.size() ) {
         yarp::os::Stamp st;
         this->getEnvelope(st);
         outPort.setEnvelope(st);
@@ -170,13 +164,13 @@ void vCornerCallback::onRead(ev::vBottle &bot)
         eventsout = fillerbottle;
         outPort.write(strictness);
         fillerbottle.clear();
-        t2 = yarp::os::Time::now();
+        tout = yarp::os::Time::now();
     }
 
 }
 
 /**********************************************************/
-bool vCornerCallback::detectcorner(const vQueue subsurf, int x, int y)
+bool vHarrisCallback::detectcorner(const vQueue subsurf, int x, int y)
 {
 
     //set the final response to be centred on the curren event
@@ -204,104 +198,6 @@ bool vCornerCallback::detectcorner(const vQueue subsurf, int x, int y)
 
 }
 
-/**********************************************************/
-bool vCornerCallback::detectcornerfast(unsigned int patch3[16], unsigned int patch4[20])
-{
-    bool found_streak = false;
-
-    for(int i = 0; i < 16; i++)
-    {
-        unsigned int ti = patch3[i];
-
-        for (int streak_size = 3; streak_size <= 6; streak_size++)
-        {
-            //find the minimum timestamp in the current arc
-            unsigned int min_t = ti;
-            for (int j = 1; j < streak_size; j++)
-            {
-                int curri = (i+j)%16;
-                unsigned int tj = patch3[curri];
-
-                if (tj < min_t)
-                    min_t = tj;
-            }
-
-            bool did_break = false;
-            for (int j = streak_size; j < 16; j++)
-            {
-                int curri = (i+j)%16;
-                unsigned int tj = patch3[curri];
-
-                if (tj >= min_t)
-                {
-                    did_break = true;
-                    break;
-                }
-            }
-
-            if(did_break == false)
-            {
-                found_streak = true;
-                break;
-            }
-
-        }
-        if (found_streak)
-        {
-            break;
-        }
-    }
-
-    if (found_streak)
-    {
-        found_streak = false;
-        for (int i = 0; i < 20; i++)
-        {
-            unsigned int ti = patch4[i];
-
-            for (int streak_size = 4; streak_size<= 8; streak_size++)
-            {
-
-                unsigned int min_t = ti;
-                for (int j = 1; j < streak_size; j++)
-                {
-                    int curri = (i+j)%20;
-                    unsigned int tj = patch4[curri];
-
-                    if (tj < min_t)
-                        min_t = tj;
-                }
-
-                bool did_break = false;
-                for (int j = streak_size; j < 20; j++)
-                {
-
-                    int curri = (i+j)%20;
-                    unsigned int tj = patch4[curri];
-
-                    if (tj >= min_t)
-                    {
-                        did_break = true;
-                        break;
-                    }
-                }
-
-                if (!did_break)
-                {
-                    found_streak = true;
-                    break;
-                }
-            }
-            if (found_streak)
-            {
-                break;
-            }
-        }
-    }
-
-    return found_streak;
-
-}
 
 //empty line to make gcc happy
 

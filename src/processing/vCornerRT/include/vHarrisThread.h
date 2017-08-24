@@ -20,8 +20,8 @@
 /// \ingroup Modules
 /// \brief detects corner events using the Harris method
 
-#ifndef __VCORNERRTTHREAD__
-#define __VCORNERRTTHREAD__
+#ifndef __VHARRISTHREAD__
+#define __VHARRISTHREAD__
 
 #include <yarp/os/all.h>
 #include <yarp/sig/all.h>
@@ -31,78 +31,41 @@
 #include <fstream>
 #include <math.h>
 
-class vComputeThread : public yarp::os::Thread
+class vComputeHarrisThread : public yarp::os::Thread
 {
 private:
 
+    int sobelsize;
+    int windowRad;
+    double sigma;
+    double thresh;
+    unsigned int qlen;
+    ev::vQueue patch;
+    filters convolution;
     ev::collectorPort *outthread;
     yarp::os::Stamp *ystamp_p;
     ev::temporalSurface *cSurf_p;
 
+    yarp::os::Mutex *semaphore;
     yarp::os::Semaphore *mutex;
 
     yarp::os::Mutex *mutex_writer;
     yarp::os::Mutex *trytoread;
     yarp::os::Mutex *mutex_reader;
     int *readcount;
-    unsigned int patch3[16];
-    unsigned int patch4[20];
 
+//    ev::vQueue *cPatch_p;
     ev::event<ev::AddressEvent> aep;
-
-    int circle3[16][2] =
-    {
-        {0, 3},
-        {1, 3},
-        {2, 2},
-        {3, 1},
-        {3, 0},
-        {3, -1},
-        {2, -2},
-        {1, -3},
-        {0, -3},
-        {-1, -3},
-        {-2, -2},
-        {-3, -1},
-        {-3, 0},
-        {-3, 1},
-        {-2, 2},
-        {-1, 3}
-    };
-
-    int circle4[20][2] =
-    {
-        {0, 4},
-        {1, 4},
-        {2, 3},
-        {3, 2},
-        {4, 1},
-        {4, 0},
-        {4, -1},
-        {3, -2},
-        {2, -3},
-        {1, -4},
-        {0, -4},
-        {-1, -4},
-        {-2, -3},
-        {-3, -2},
-        {-4, -1},
-        {-4, 0},
-        {-4, 1},
-        {-3, 2},
-        {-2, 3},
-        {-1, 4}
-    };
-
 
     bool suspended;
 
-    bool detectcornerfast(unsigned int patch[16], unsigned int patch4[20]);
+    bool detectcorner(int x, int y);
 
 public:
 
-    vComputeThread(ev::collectorPort *outthread, yarp::os::Mutex *mutex_writer, yarp::os::Mutex *mutex_reader,
-                   int *readcount);
+    vComputeHarrisThread(int sobelsize, int windowRad, double sigma, double thresh, unsigned int qlen, ev::collectorPort *outthread, yarp::os::Mutex *semaphore,
+                    yarp::os::Mutex *mutex_writer, yarp::os::Mutex *trytoread, yarp::os::Mutex *mutex_reader, int *readcount);
+//    void setData(ev::temporalSurface *cSurf, yarp::os::Stamp ystamp);
     void assignTask(ev::event<ev::AddressEvent> ae, ev::temporalSurface *cSurf, yarp::os::Stamp *ystamp);
     void suspend();
     void wakeup();
@@ -114,7 +77,7 @@ public:
     void onStop();
 };
 
-class vCornerThread : public yarp::os::Thread
+class vHarrisThread : public yarp::os::Thread
 {
 private:
 
@@ -122,6 +85,8 @@ private:
     ev::queueAllocator allocatorCallback;
 
     //data structures
+//    ev::historicalSurface surfaceleft;
+//    ev::historicalSurface surfaceright;
     ev::temporalSurface *surfaceleft;
     ev::temporalSurface *surfaceright;
 
@@ -130,13 +95,16 @@ private:
     yarp::os::BufferedPort<yarp::os::Bottle> debugPort;
 
     //list of thread for processing
-    std::vector<vComputeThread *> computeThreads;
+    std::vector<vComputeHarrisThread *> computeThreads;
     yarp::os::Mutex semaphore;
 
     //to protect the writing
     yarp::os::Mutex *mutex_writer;
+    yarp::os::Mutex *trytoread;
     yarp::os::Mutex *mutex_reader;
     int readcount;
+
+//    ev::vtsHelper unwrapper;
 
     //thread for the output
     ev::collectorPort outthread;
@@ -144,18 +112,32 @@ private:
     //synchronising value
     yarp::os::Stamp yarpstamp;
 
-//    int k;
+    int k;
 
     //parameters
     unsigned int height;
     unsigned int width;
     std::string name;
     bool strict;
+    int qlen;
+    int temporalsize;
+    int windowRad;
+    int sobelsize;
+    double sigma;
+    double thresh;
     int nthreads;
+    bool delayV;
+    bool delayT;
+    bool addToSurface;
+
+    filters convolution;
+    bool detectcorner(ev::vQueue patch, int x, int y);
 
 public:
 
-    vCornerThread(unsigned int height, unsigned int width, std::string name, bool strict, int nthreads);
+    vHarrisThread(unsigned int height, unsigned int width, std::string name, bool strict, int qlen,
+                  double temporalsize, int windowRad, int sobelsize, double sigma, double thresh,
+                  int nthreads, bool delayV, bool delayT, bool addToSurface);
     bool threadInit();
     bool open(std::string portname);
     void onStop();
