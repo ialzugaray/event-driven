@@ -91,16 +91,16 @@ void vFastThread::run()
         }
         if(isStopping()) break;
 
-//        int maxV = 50000;
-//        unsigned int delay_n = allocatorCallback.queryDelayN();
-//        double acceptableRatio = ((double)delay_n)/maxV;
-//        if(acceptableRatio <= 1.0)
-//            acceptableRatio = 1;
+        int maxV = 50000;
+        unsigned int delay_n = allocatorCallback.queryDelayN();
+        double acceptableRatio = ((double)delay_n)/maxV;
+        if(acceptableRatio <= 1.0)
+            acceptableRatio = 1;
 
-//        double currCount;
-//        int currSkip,lastSkip = 0;
-//        currCount = 0.0;
-//        currSkip = (int)currCount;
+        double currCount;
+        int currSkip,lastSkip = 0;
+        currCount = 0.0;
+        currSkip = (int)currCount;
 
 //        int countQi = 0;
         int countProcessed = 0;
@@ -148,7 +148,21 @@ void vFastThread::run()
 //            countQi++;
 //        }
 
-        for(ev::vQueue::iterator qi = q->begin(); qi != q->end(); qi++) {
+        bool firstChecked = false;
+        ev::vQueue::iterator qi;
+        while(currSkip < q->size())  {
+
+            if(!firstChecked) {
+                qi = q->begin();
+                firstChecked = true;
+            } else {
+                qi = qi + (currSkip - lastSkip);
+                lastSkip = currSkip;
+            }
+
+            lastSkip = currSkip;
+            currCount += acceptableRatio;
+            currSkip = (int)currCount;
 
             auto ae = ev::is_event<ev::AE>(*qi);
             ev::temporalSurface *cSurf;
@@ -166,16 +180,14 @@ void vFastThread::run()
 
             //unwrap stamp and add the event to the surface
             (*qi)->stamp = unwrapper(ae->stamp);
-
-//            mutex_writer->lock();
             cSurf->fastAddEvent(*qi);
-//            mutex_writer->unlock();
 
             unsigned int patch3[16];
             unsigned int patch4[20];
             cSurf->getEventsOnCircle3(patch3, ae->x, ae->y, circle3);
             cSurf->getEventsOnCircle4(patch4, ae->x, ae->y, circle4);
             bool isc = detectcornerfast(patch3, patch4);
+            countProcessed++;
 
             //if it's a corner, add it to the output bottle
             if(isc) {
@@ -183,7 +195,46 @@ void vFastThread::run()
                 ce->ID = 1;
                 outthread.pushevent(ce, yarpstamp);
             }
+
         }
+
+
+//        for(ev::vQueue::iterator qi = q->begin(); qi != q->end(); qi++) {
+
+//            auto ae = ev::is_event<ev::AE>(*qi);
+//            ev::temporalSurface *cSurf;
+//            if(ae->getChannel()) {
+//                if(ae->polarity)
+//                    cSurf = surfaceOfR;
+//                else
+//                    cSurf = surfaceOnR;
+//            } else {
+//                if(ae->polarity)
+//                    cSurf = surfaceOfL;
+//                else
+//                    cSurf = surfaceOnL;
+//            }
+
+//            //unwrap stamp and add the event to the surface
+//            (*qi)->stamp = unwrapper(ae->stamp);
+
+////            mutex_writer->lock();
+//            cSurf->fastAddEvent(*qi);
+////            mutex_writer->unlock();
+
+//            unsigned int patch3[16];
+//            unsigned int patch4[20];
+//            cSurf->getEventsOnCircle3(patch3, ae->x, ae->y, circle3);
+//            cSurf->getEventsOnCircle4(patch4, ae->x, ae->y, circle4);
+//            bool isc = detectcornerfast(patch3, patch4);
+
+//            //if it's a corner, add it to the output bottle
+//            if(isc) {
+//                auto ce = make_event<LabelledAE>(ae);
+//                ce->ID = 1;
+//                outthread.pushevent(ce, yarpstamp);
+//            }
+//        }
 
         if(debugPort.getOutputCount()) {
             yarp::os::Bottle &scorebottleout = debugPort.prepare();

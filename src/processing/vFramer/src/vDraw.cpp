@@ -791,22 +791,27 @@ void isoInterestDraw::draw(cv::Mat &image, const ev::vQueue &eSet, int vTime)
     isoimage.setTo(255);
 
     if(checkStagnancy(eSet) > clearThreshold) {
-        return;
+         return;
     }
 
     if(eSet.empty()) return;
 
     int cts = eSet.back()->stamp;
     int dt = cts - eSet.front()->stamp;
-    if(dt < 0) dt += ev::vtsHelper::maxStamp();
+    if(dt < 0) dt += ev::vtsHelper::max_stamp;
     maxdt = std::max(maxdt, dt);
+
+    int skip = 1 + eSet.size() / 50000;
 
     int r = 1;
     CvScalar c1 = CV_RGB(255, 0, 0);
     CvScalar c2 = CV_RGB(0, 255, 255);
-    ev::vQueue::const_iterator qi;
-    for(qi = eSet.begin(); qi != eSet.end(); qi++) {
-        auto cep = is_event<LabelledAE>(*qi);
+
+    //ev::vQueue::const_iterator qi;
+    //for(qi = eSet.begin(); qi != eSet.end(); qi += skip) {
+    for(int i = eSet.size() - 1; i >= 0; i -= skip) {
+
+        auto cep = is_event<LabelledAE>(eSet[i]);
 
         //transform values
         int dt = cts - cep->stamp;
@@ -832,8 +837,6 @@ void isoInterestDraw::draw(cv::Mat &image, const ev::vQueue &eSet, int vTime)
             cv::circle(image, centr, r, c1);
         else
             cv::circle(image, centr, r, c2);
-
-//        isoimage.at<cv::Vec3b>(py, px) = cv::Vec3b(0, 0, 255);
     }
 
     if(!image.empty()) {
@@ -856,6 +859,78 @@ void isoInterestDraw::draw(cv::Mat &image, const ev::vQueue &eSet, int vTime)
 
 
     image = isoimage - baseimage;
+
+
+
+//    cv::Mat isoimage = baseimage.clone();
+//    isoimage.setTo(255);
+
+//    if(checkStagnancy(eSet) > clearThreshold) {
+//        return;
+//    }
+
+//    if(eSet.empty()) return;
+
+//    int cts = eSet.back()->stamp;
+//    int dt = cts - eSet.front()->stamp;
+//    if(dt < 0) dt += ev::vtsHelper::maxStamp();
+//    maxdt = std::max(maxdt, dt);
+
+//    int r = 1;
+//    CvScalar c1 = CV_RGB(255, 0, 0);
+//    CvScalar c2 = CV_RGB(0, 255, 255);
+//    ev::vQueue::const_iterator qi;
+//    for(qi = eSet.begin(); qi != eSet.end(); qi++) {
+//        auto cep = is_event<LabelledAE>(*qi);
+
+//        //transform values
+//        int dt = cts - cep->stamp;
+//        if(dt < 0) dt += ev::vtsHelper::maxStamp();
+//        dt = ((double)dt / maxdt) * Zlimit + 0.5;
+//        int px = cep->x;
+//        int py = cep->y;
+//        if(flip) {
+//            px = Xlimit - 1 - px;
+//            py = Ylimit - 1 - py;
+//        }
+//        int pz = dt;
+//        pttr(px, py, pz);
+//        px += imagexshift;
+//        py += imageyshift;
+
+//        if(px < 0 || px >= imagewidth || py < 0 || py >= imageheight) {
+//            continue;
+//        }
+
+//        cv::Point centr(px, py);
+//        if(cep->ID == 1)
+//            cv::circle(image, centr, r, c1);
+//        else
+//            cv::circle(image, centr, r, c2);
+
+////        isoimage.at<cv::Vec3b>(py, px) = cv::Vec3b(0, 0, 255);
+//    }
+
+//    if(!image.empty()) {
+//        for(int y = 0; y < image.rows; y++) {
+//            for(int x = 0; x < image.cols; x++) {
+//                cv::Vec3b &pixel = image.at<cv::Vec3b>(y, x);
+
+//                if(pixel[0] != 255 || pixel[1] != 255 || pixel[2] != 255) {
+
+//                    int px = x, py = y;
+//                    if(px < 0 || px >= imagewidth || py < 0 || py >= imageheight)
+//                        continue;
+
+//                    isoimage.at<cv::Vec3b>(py, px) = pixel;
+//                }
+//            }
+//        }
+//    }
+
+
+
+//    image = isoimage - baseimage;
 
 }
 
@@ -1053,7 +1128,8 @@ void boundingDraw::draw(cv::Mat &image, const ev::vQueue &eSet, int vTime)
 //    }
 
     //if we have enough inliers
-    if(pointsToTrack.size() > 5) {
+    int thickness = 2;
+    if(pointsToTrack.size() > 3) {
 
         //we fit a polygon to the points
         double epsilon = 0.1;
@@ -1063,7 +1139,7 @@ void boundingDraw::draw(cv::Mat &image, const ev::vQueue &eSet, int vTime)
         //we determine the bounding box around the polygon
         CvScalar color = CV_RGB(0, 255, 255);
         cv::Rect boundRect = cv::boundingRect( cv::Mat(contours_poly) );
-        cv::rectangle( image, boundRect.tl(), boundRect.br(), color );
+        cv::rectangle( image, boundRect.tl(), boundRect.br(), color , thickness);
     }
 
 }

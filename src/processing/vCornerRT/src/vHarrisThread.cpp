@@ -317,51 +317,116 @@ void vHarrisThread::onStop()
 
 //}
 
-void vHarrisThread::run()
-{
+//void vHarrisThread::run()
+//{
+//    double acceptableRatio;
+//    while(true) {
 
-    double acceptableRatio;
-    while(true) {
-
-        ev::vQueue *q = 0;
-        while(!q && !isStopping()) {
-            q = allocatorCallback.getNextQ(yarpstamp);
-        }
-        if(isStopping()) break;
-
-//        if(delayV) {
-            int maxV = 10000;
-            unsigned int delay_n = allocatorCallback.queryDelayN();
-            acceptableRatio = ((double)delay_n)/maxV;
-            if(acceptableRatio <= 1.0)
-                acceptableRatio = 1;
+//        ev::vQueue *q = 0;
+//        while(!q && !isStopping()) {
+//            q = allocatorCallback.getNextQ(yarpstamp);
 //        }
+//        if(isStopping()) break;
 
-//        if(delayT) {
-//            double maxT = 0.1;
-//            double delay_t = allocatorCallback.queryDelayT();
-//            acceptableRatio = ((double)delay_t)/maxT;
+////        if(delayV) {
+//            int maxV = 10000;
+//            unsigned int delay_n = allocatorCallback.queryDelayN();
+//            acceptableRatio = ((double)delay_n)/maxV;
 //            if(acceptableRatio <= 1.0)
 //                acceptableRatio = 1;
+////        }
+
+////        if(delayT) {
+////            double maxT = 0.1;
+////            double delay_t = allocatorCallback.queryDelayT();
+////            acceptableRatio = ((double)delay_t)/maxT;
+////            if(acceptableRatio <= 1.0)
+////                acceptableRatio = 1;
+////        }
+
+////            static int counter = 0;
+////            if(counter++ > 100) {
+////                std::cout << delay_n << " " << acceptableRatio << std::endl << std::endl;
+////                counter = 0;
+////            }
+
+
+//        double currCount;
+//        int currSkip,lastSkip = 0;
+//        currCount = 0.0;
+//        currSkip = (int)currCount;
+
+//        int countProcessed = 0;
+//        if(addToSurface) {
+
+////            int countQi = 0;
+////            for(ev::vQueue::iterator qi = q->begin(); qi != q->end(); qi++) {
+
+////                auto ae = ev::is_event<ev::AE>(*qi);
+////                ev::temporalSurface *cSurf;
+////                if(ae->getChannel() == 0)
+////                    cSurf = surfaceleft;
+////                else
+////                    cSurf = surfaceright;
+
+////                mutex_writer->lock();
+////                cSurf->fastAddEvent(*qi);
+////                mutex_writer->unlock();
+
+////                if((countQi != (currSkip - lastSkip))) {
+
+//////                    if(delay_n < maxV) {
+//////                        int k = 0;
+//////                        while(true) {
+
+//////                            //assign a task to a thread that is not managing a task
+//////                            if(computeThreads[k]->available()) {
+//////                                computeThreads[k]->assignTask(ae, cSurf, &yarpstamp);
+//////                                countProcessed++;
+//////                                break;
+//////                            }
+//////                            if(++k == nthreads)
+//////                                k = 0;
+//////                        }
+//////                    }
+//////                    else {
+////                        for(int k = 0; k < nthreads; k++) {
+
+////                            //assign a task to a thread that is not managing a task
+////                            if(computeThreads[k]->available()) {
+////                                computeThreads[k]->assignTask(ae, cSurf, &yarpstamp);
+////                                countProcessed++;
+////                                break;
+////                            }
+////                        }
+//////                    }
+
+////                    lastSkip = currSkip;
+////                    currCount += acceptableRatio;
+////                    currSkip = (int)currCount;
+////                }
+
+////                countQi++;
+////            }
+
 //        }
+//        else {
 
-//            static int counter = 0;
-//            if(counter++ > 100) {
-//                std::cout << delay_n << " " << acceptableRatio << std::endl << std::endl;
-//                counter = 0;
-//            }
+//            bool firstChecked = false;
+//            ev::vQueue::iterator qi;
+//            while(currSkip < q->size())  {
 
+//                if(!firstChecked) {
+//                    qi = q->begin();
+//                    firstChecked = true;
+//                } else {
+//                    qi = qi + (currSkip - lastSkip);
+//                    lastSkip = currSkip;
+//                }
 
-        double currCount;
-        int currSkip,lastSkip = 0;
-        currCount = 0.0;
-        currSkip = (int)currCount;
-
-        int countProcessed = 0;
-        if(addToSurface) {
-
-//            int countQi = 0;
-//            for(ev::vQueue::iterator qi = q->begin(); qi != q->end(); qi++) {
+//                lastSkip = currSkip;
+//                currCount += acceptableRatio;
+//                currSkip = (int)currCount;
 
 //                auto ae = ev::is_event<ev::AE>(*qi);
 //                ev::temporalSurface *cSurf;
@@ -374,100 +439,120 @@ void vHarrisThread::run()
 //                cSurf->fastAddEvent(*qi);
 //                mutex_writer->unlock();
 
-//                if((countQi != (currSkip - lastSkip))) {
+//                //                if(delay_n < maxV) {
+//                int k = 0;
+//                while(true) {
 
-////                    if(delay_n < maxV) {
-////                        int k = 0;
-////                        while(true) {
-
-////                            //assign a task to a thread that is not managing a task
-////                            if(computeThreads[k]->available()) {
-////                                computeThreads[k]->assignTask(ae, cSurf, &yarpstamp);
-////                                countProcessed++;
-////                                break;
-////                            }
-////                            if(++k == nthreads)
-////                                k = 0;
-////                        }
-////                    }
-////                    else {
-//                        for(int k = 0; k < nthreads; k++) {
-
-//                            //assign a task to a thread that is not managing a task
-//                            if(computeThreads[k]->available()) {
-//                                computeThreads[k]->assignTask(ae, cSurf, &yarpstamp);
-//                                countProcessed++;
-//                                break;
-//                            }
-//                        }
-////                    }
-
-//                    lastSkip = currSkip;
-//                    currCount += acceptableRatio;
-//                    currSkip = (int)currCount;
+//                    //assign a task to a thread that is not managing a task
+//                    if(computeThreads[k]->available()) {
+//                        computeThreads[k]->assignTask(ae, cSurf, &yarpstamp);
+//                        countProcessed++;
+//                        break;
+//                    }
+//                    if(++k == nthreads)
+//                        k = 0;
 //                }
+//                //                }
+//                //                else {
+////                                    for(int k = 0; k < nthreads; k++) {
 
-//                countQi++;
+////                                        //assign a task to a thread that is not managing a task
+////                                        if(computeThreads[k]->available()) {
+////                                            computeThreads[k]->assignTask(ae, cSurf, &yarpstamp);
+////                                            countProcessed++;
+////                                            break;
+////                                        }
+////                                    }
+//                //                }
+
 //            }
 
+//        }
+
+//        static double prevtime = yarp::os::Time::now();
+//        if(debugPort.getOutputCount()) {
+
+//            double time = yarp::os::Time::now();
+
+//            yarp::os::Bottle &scorebottleout = debugPort.prepare();
+//            scorebottleout.clear();
+//            scorebottleout.addDouble(countProcessed/(time-prevtime));
+//            scorebottleout.addDouble((double)countProcessed/q->size());
+//            scorebottleout.addDouble(delay_n);
+//            debugPort.write();
+
+//            prevtime = time;
+//        }
+
+//        allocatorCallback.scrapQ();
+
+//    }
+
+//}
+
+void vHarrisThread::run()
+{
+
+    double gain = 0.3;
+    int minAcceptableDelay = 500;
+    while(true) {
+
+        ev::vQueue *q = 0;
+        while(!q && !isStopping()) {
+            q = allocatorCallback.getNextQ(yarpstamp);
         }
-        else {
+        if(isStopping()) break;
 
-            bool firstChecked = false;
-            ev::vQueue::iterator qi;
-            while(currSkip < q->size())  {
+        unsigned int delay_n = allocatorCallback.queryDelayN();
+        int desiredDelay = minAcceptableDelay + (int)(delay_n * gain);
+        double acceptableRatio = ((double)delay_n)/desiredDelay;
+//        std::cout << desiredDelay << " " << acceptableRatio << std::endl;
 
-                if(!firstChecked) {
-                    qi = q->begin();
-                    firstChecked = true;
-                } else {
-                    qi = qi + (currSkip - lastSkip);
-                    lastSkip = currSkip;
-                }
+        double currCount;
+        int currSkip,lastSkip = 0;
+        currCount = 0.0;
+        currSkip = (int)currCount;
 
+        int countProcessed = 0;
+        bool firstChecked = false;
+        ev::vQueue::iterator qi;
+        while(currSkip < q->size())  {
+
+            if(!firstChecked) {
+                qi = q->begin();
+                firstChecked = true;
+            } else {
+                qi = qi + (currSkip - lastSkip);
                 lastSkip = currSkip;
-                currCount += acceptableRatio;
-                currSkip = (int)currCount;
-
-                auto ae = ev::is_event<ev::AE>(*qi);
-                ev::temporalSurface *cSurf;
-                if(ae->getChannel() == 0)
-                    cSurf = surfaceleft;
-                else
-                    cSurf = surfaceright;
-
-                mutex_writer->lock();
-                cSurf->fastAddEvent(*qi);
-                mutex_writer->unlock();
-
-                //                if(delay_n < maxV) {
-                int k = 0;
-                while(true) {
-
-                    //assign a task to a thread that is not managing a task
-                    if(computeThreads[k]->available()) {
-                        computeThreads[k]->assignTask(ae, cSurf, &yarpstamp);
-                        countProcessed++;
-                        break;
-                    }
-                    if(++k == nthreads)
-                        k = 0;
-                }
-                //                }
-                //                else {
-//                                    for(int k = 0; k < nthreads; k++) {
-
-//                                        //assign a task to a thread that is not managing a task
-//                                        if(computeThreads[k]->available()) {
-//                                            computeThreads[k]->assignTask(ae, cSurf, &yarpstamp);
-//                                            countProcessed++;
-//                                            break;
-//                                        }
-//                                    }
-                //                }
-
             }
 
+            lastSkip = currSkip;
+            currCount += acceptableRatio;
+            currSkip = (int)currCount;
+
+            auto ae = ev::is_event<ev::AE>(*qi);
+            ev::temporalSurface *cSurf;
+            if(ae->getChannel() == 0)
+                cSurf = surfaceleft;
+            else
+                cSurf = surfaceright;
+
+            mutex_writer->lock();
+            cSurf->fastAddEvent(*qi);
+            mutex_writer->unlock();
+
+            int k = 0;
+            while(true) {
+
+                //assign a task to a thread that is not managing a task
+                if(computeThreads[k]->available()) {
+                    computeThreads[k]->assignTask(ae, cSurf, &yarpstamp);
+                    countProcessed++;
+                    break;
+                }
+                if(++k == nthreads)
+                    k = 0;
+            }
         }
 
         static double prevtime = yarp::os::Time::now();
@@ -479,6 +564,7 @@ void vHarrisThread::run()
             scorebottleout.clear();
             scorebottleout.addDouble(countProcessed/(time-prevtime));
             scorebottleout.addDouble((double)countProcessed/q->size());
+            scorebottleout.addDouble(delay_n);
             debugPort.write();
 
             prevtime = time;
@@ -489,6 +575,8 @@ void vHarrisThread::run()
     }
 
 }
+
+
 
 //bool vCornerThread::detectcorner(ev::vQueue patch, int x, int y)
 //{
