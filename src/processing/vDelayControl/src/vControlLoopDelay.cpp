@@ -10,20 +10,28 @@ void delayControl::initFilter(int width, int height, int nparticles, int bins,
 {
     vpf.initialise(width, height, nparticles, bins, adaptive, nthreads,
                    minlikelihood, inlierThresh, randoms);
+
     res.height = height;
     res.width = width;
 }
 
-void delayControl::initDelayControl(double gain, int maxtoproc, int positiveThreshold)
+void delayControl::setFilterInitialState(int x, int y, int r)
+{
+    vpf.setSeed(x, y, r);
+    vpf.resetToSeed();
+}
+
+void delayControl::initDelayControl(double gain, int maxtoproc, int positiveThreshold, int mindelay)
 {
     this->gain = gain;
-    this->minEvents = 1.0;
+    this->minEvents = mindelay;
     qROI.setSize(maxtoproc);
     this->detectionThreshold = positiveThreshold;
 }
 
-bool delayControl::open(std::string name)
+bool delayControl::open(std::string name, unsigned int qlimit)
 {
+    inputPort.setQLimit(qlimit);
     if(!inputPort.open(name + "/vBottle:i"))
         return false;
     if(!outputPort.open(name + "/vBottle:o"))
@@ -55,6 +63,7 @@ void delayControl::run()
 
     unsigned int targetproc = 0;
     unsigned int i = 0;
+    bool breakOnAdded = gain < 1.0;
     yarp::os::Stamp ystamp;
     double stagnantstart = 0;
     bool detection = false;
@@ -78,7 +87,8 @@ void delayControl::run()
         //update the ROI with enough events
         Tgetwindow = yarp::os::Time::now();
         unsigned int addEvents = 0;
-        while(addEvents < targetproc) {
+        unsigned int testedEvents = 0;
+        while(testedEvents < targetproc) {
 
             //if we ran out of events get a new queue
             if(i >= q->size()) {
@@ -93,6 +103,9 @@ void delayControl::run()
 
             auto v = is_event<AE>((*q)[i]);
             addEvents += qROI.add(v);
+            //if(breakOnAdded) testedEvents = addEvents;
+            //else testedEvents++;
+            testedEvents++;
             i++;
         }
         Tgetwindow = yarp::os::Time::now() - Tgetwindow;
@@ -110,9 +123,9 @@ void delayControl::run()
         vpf.performObservation(qROI.q);
         Tlikelihood = yarp::os::Time::now() - Tlikelihood;
         vpf.extractTargetPosition(avgx, avgy, avgr);
-        double roisize = avgr*1.4;
+        double roisize = avgr * 1.4;
         qROI.setROI(avgx - roisize, avgx + roisize, avgy - roisize, avgy + roisize);
-        qROI.setSize(avgr * 4.0 * M_PI);
+        qROI.setSize(avgr * 8.0 * M_PI);
 
         Tresample = yarp::os::Time::now();
         vpf.performResample();
@@ -123,22 +136,22 @@ void delayControl::run()
         Tpredict = yarp::os::Time::now() - Tpredict;
 
         //check for stagnancy
-        if(vpf.maxlikelihood < detectionThreshold) {
+//        if(vpf.maxlikelihood < detectionThreshold) {
 
-            if(!stagnantstart) {
-                stagnantstart = yarp::os::Time::now();
-            } else {
-                if(yarp::os::Time::now() - stagnantstart > 2.0) {
-                    vpf.resetToSeed();
-                    detection = false;
-                    stagnantstart = 0;
-                    yInfo() << "Performing full resample";
-                }
-            }
-        } else {
-            detection = true;
-            stagnantstart = 0;
-        }
+//            if(!stagnantstart) {
+//                stagnantstart = yarp::os::Time::now();
+//            } else {
+//                if(yarp::os::Time::now() - stagnantstart > 1.0) {
+//                    vpf.resetToSeed();
+//                    detection = false;
+//                    stagnantstart = 0;
+//                    yInfo() << "Performing full resample";
+//                }
+//            }
+//        } else {
+//            detection = true;
+//            stagnantstart = 0;
+//        }
 
 
         //output our event
@@ -172,12 +185,16 @@ void delayControl::run()
             static double val3 = -ev::vtsHelper::max_stamp;
             static double val4 = -ev::vtsHelper::max_stamp;
             static double val5 = -ev::vtsHelper::max_stamp;
+            static double val6 = -ev::vtsHelper::max_stamp;
+            static double val7 = -ev::vtsHelper::max_stamp;
 
             val1 = std::max(val1, (double)targetproc);
             val2 = std::max(val2, (double)inputPort.queryDelayN());
-            val3 = std::max(val3, 0.0);
-            val4 = std::max(val4, 0.0);
-            val5 = std::max(val5, 0.0);
+            val3 = std::max(val3, inputPort.queryDelayT());
+            val4 = std::max(val4, inputPort.queryRate());
+            val5 = std::max(val5, avgx);
+            val6 = std::max(val6, avgy);
+            val7 = std::max(val7, avgr);
 
             double scopedt = yarp::os::Time::now() - pscopetime;
             if((scopedt > 0.05 || scopedt < 0)) {
@@ -190,12 +207,16 @@ void delayControl::run()
                 scopedata.addDouble(val3);
                 scopedata.addDouble(val4);
                 scopedata.addDouble(val5);
+                scopedata.addDouble(val6);
+                scopedata.addDouble(val7);
 
                 val1 = -ev::vtsHelper::max_stamp;
                 val2 = -ev::vtsHelper::max_stamp;
                 val3 = -ev::vtsHelper::max_stamp;
                 val4 = -ev::vtsHelper::max_stamp;
                 val5 = -ev::vtsHelper::max_stamp;
+                val6 = -ev::vtsHelper::max_stamp;
+                val7 = -ev::vtsHelper::max_stamp;
 
                 scopePort.write();
             }

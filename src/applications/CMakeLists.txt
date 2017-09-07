@@ -6,6 +6,8 @@ option(ENABLE_reptest "Build representation tester" OFF)
 option(ENABLE_vergence "Build vergence control demo" OFF)
 option(ENABLE_calibrate "Build camera calibration" OFF)
 option(ENABLE_view "Build basic viewer" OFF)
+option(ENABLE_corner "Build corner detector" OFF)
+option(ENABLE_dualCamTransform "Build event to frame transform" OFF)
 option(ENABLE_egomotion "Build egomotion module" OFF)
 
 if(ENABLE_autosaccade)
@@ -32,7 +34,14 @@ if(ENABLE_view)
     add_subdirectory(view)
 endif(ENABLE_view)
 
+if(ENABLE_dualCamTransform)
+    add_subdirectory(dualCamTransform)
+endif(ENABLE_dualCamTransform)
+
+if(ENABLE_corner)
+    add_subdirectory(corner)
+endif(ENABLE_corner)
+
 if(ENABLE_egomotion)
     add_subdirectory(egomotion)
 endif(ENABLE_egomotion)
-
