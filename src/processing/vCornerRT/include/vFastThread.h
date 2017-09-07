@@ -123,10 +123,15 @@ private:
     //data structures
 //    ev::temporalSurface *surfaceleft;
 //    ev::temporalSurface *surfaceright;
-    ev::temporalSurface *surfaceOnL;
-    ev::temporalSurface *surfaceOfL;
-    ev::temporalSurface *surfaceOnR;
-    ev::temporalSurface *surfaceOfR;
+    //ev::temporalSurface *surfaceOnL;
+    //ev::temporalSurface *surfaceOfL;
+    //ev::temporalSurface *surfaceOnR;
+    //ev::temporalSurface *surfaceOfR;
+
+    yarp::sig::ImageOf< yarp::sig::PixelInt > surfaceOnL;
+    yarp::sig::ImageOf< yarp::sig::PixelInt > surfaceOfL;
+    yarp::sig::ImageOf< yarp::sig::PixelInt > surfaceOnR;
+    yarp::sig::ImageOf< yarp::sig::PixelInt > surfaceOfR;
 
     //output port for the vBottle with the new events computed by the module
     yarp::os::BufferedPort<ev::vBottle> vBottleOut;
@@ -200,12 +205,15 @@ private:
     std::string name;
     bool strict;
     int nthreads;
+    double gain;
 
+    void getCircle3(yarp::sig::ImageOf<yarp::sig::PixelInt> *cSurf, int x, int y, unsigned int (&p3)[16], int (&circle3)[16][2]);
+    void getCircle4(yarp::sig::ImageOf<yarp::sig::PixelInt> *cSurf, int x, int y, unsigned int (&p4)[20], int (&circle4)[20][2]);
     bool detectcornerfast(unsigned int patch3[16], unsigned int patch4[20]);
 
 public:
 
-    vFastThread(unsigned int height, unsigned int width, std::string name, bool strict, int nthreads);
+    vFastThread(unsigned int height, unsigned int width, std::string name, bool strict, int nthreads, double gain);
     bool threadInit();
     bool open(std::string portname);
     void onStop();

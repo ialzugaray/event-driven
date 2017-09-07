@@ -46,6 +46,7 @@ bool vCornerModule::configure(yarp::os::ResourceFinder &rf)
     bool allToSurface = rf.check("allToSurf", yarp::os::Value(true)).asBool();
     bool harris = rf.check("harris", yarp::os::Value(false)).asBool();
     bool fast = rf.check("fast", yarp::os::Value(false)).asBool();
+    double gain = rf.check("gain", yarp::os::Value(0.1)).asDouble();
 
     /* create the thread and pass pointers to the module parameters */
     if(callback) {
@@ -73,13 +74,13 @@ bool vCornerModule::configure(yarp::os::ResourceFinder &rf)
             fastthread = 0;
             harristhread = new vHarrisThread(height, width, moduleName, strict, qlen, temporalsize,
                                              windowRad, sobelsize, sigma, thresh, nthreads,
-                                             delayV, delayT, allToSurface);
+                                             delayV, delayT, allToSurface, gain);
             if(!harristhread->start())
                 return false;
         }
         else if(fast) {
             harristhread = 0;
-            fastthread = new vFastThread(height, width, moduleName, strict, nthreads);
+            fastthread = new vFastThread(height, width, moduleName, strict, nthreads, gain);
             if(!fastthread->start())
                 return false;
         }

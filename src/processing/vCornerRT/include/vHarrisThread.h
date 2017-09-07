@@ -129,6 +129,7 @@ private:
     bool delayV;
     bool delayT;
     bool addToSurface;
+    double gain;
 
     filters convolution;
     bool detectcorner(ev::vQueue patch, int x, int y);
@@ -137,7 +138,7 @@ public:
 
     vHarrisThread(unsigned int height, unsigned int width, std::string name, bool strict, int qlen,
                   double temporalsize, int windowRad, int sobelsize, double sigma, double thresh,
-                  int nthreads, bool delayV, bool delayT, bool addToSurface);
+                  int nthreads, bool delayV, bool delayT, bool addToSurface, double gain);
     bool threadInit();
     bool open(std::string portname);
     void onStop();

@@ -2,7 +2,7 @@
 
 using namespace ev;
 
-vFastThread::vFastThread(unsigned int height, unsigned int width, std::string name, bool strict, int nthreads)
+vFastThread::vFastThread(unsigned int height, unsigned int width, std::string name, bool strict, int nthreads, double gain)
 {
     std::cout << "Using FAST implementation..." << std::endl;
 
@@ -11,14 +11,22 @@ vFastThread::vFastThread(unsigned int height, unsigned int width, std::string na
     this->name = name;
     this->strict = strict;
     this->nthreads = nthreads;
+    this->gain = gain;
+
+    surfaceOfR.resize(width, height);
+    surfaceOnR.resize(width, height);
+    surfaceOfL.resize(width, height);
+    surfaceOnL.resize(width, height);
 
 //    surfaceleft  = new temporalSurface(width, height);
 //    surfaceright = new temporalSurface(width, height);
 
-    surfaceOfR = new ev::temporalSurface(width, height);
-    surfaceOnR = new ev::temporalSurface(width, height);
-    surfaceOfL = new ev::temporalSurface(width, height);
-    surfaceOnL = new ev::temporalSurface(width, height);
+//    surfaceOfR = new ev::temporalSurface(width, height);
+//    surfaceOnR = new ev::temporalSurface(width, height);
+//    surfaceOfL = new ev::temporalSurface(width, height);
+//    surfaceOnL = new ev::temporalSurface(width, height);
+
+
 
 //    mutex_writer = new yarp::os::Mutex();
 //    mutex_reader = new yarp::os::Mutex();
@@ -37,6 +45,7 @@ vFastThread::vFastThread(unsigned int height, unsigned int width, std::string na
 bool vFastThread::threadInit()
 {
 
+    allocatorCallback.setQLimit(1);
     if(!allocatorCallback.open("/" + name + "/vBottle:i")) {
     std::cout << "could not open vBottleIn port " << std::endl;
         return false;
@@ -71,18 +80,51 @@ void vFastThread::onStop()
 //    delete surfaceleft;
 //    delete surfaceright;
 
-    delete surfaceOnL;
-    delete surfaceOfL;
-    delete surfaceOnR;
-    delete surfaceOfR;
+   // delete surfaceOnL;
+    //delete surfaceOfL;
+    //delete surfaceOnR;
+    //delete surfaceOfR;
 
 //    delete mutex_writer;
 //    delete mutex_reader;
 
 }
 
+void vFastThread::getCircle3(yarp::sig::ImageOf<yarp::sig::PixelInt> *cSurf, int x, int y, unsigned int (&p3)[16], int (&circle3)[16][2])
+{
+    for (int i = 0; i < 16; i++) {
+        int xi = x + circle3[i][0];
+        int yi = y + circle3[i][1];
+        if(xi < 0 || yi < 0 || xi >= width || yi >= height)
+            continue;
+
+        p3[i] = (*cSurf)(xi, yi);
+//        std::cout << i << " " << patch3[i] << std::endl;
+
+    }
+
+
+}
+
+void vFastThread::getCircle4(yarp::sig::ImageOf<yarp::sig::PixelInt> *cSurf, int x, int y, unsigned int (&p4)[20], int (&circle4)[20][2])
+{
+    for (int i = 0; i < 20; i++) {
+        int xi = x + circle4[i][0];
+        int yi = y + circle4[i][1];
+        if(xi < 0 || yi < 0 || xi >= width || yi >= height)
+            continue;
+
+        p4[i] = (*cSurf)(xi, yi);
+//        std::cout << i << " " << patch3[i] << std::endl;
+
+    }
+
+
+}
+
 void vFastThread::run()
 {
+    int minAcceptableDelay =  5120;
     while(true) {
 
         ev::vQueue *q = 0;
@@ -91,11 +133,15 @@ void vFastThread::run()
         }
         if(isStopping()) break;
 
-        int maxV = 50000;
+//        int maxV = 50000;
         unsigned int delay_n = allocatorCallback.queryDelayN();
-        double acceptableRatio = ((double)delay_n)/maxV;
-        if(acceptableRatio <= 1.0)
-            acceptableRatio = 1;
+//        double acceptableRatio = ((double)delay_n)/maxV;
+//        if(acceptableRatio <= 1.0)
+//            acceptableRatio = 1;
+
+        double increment = gain * (delay_n - q->size()) / minAcceptableDelay;
+        if(increment < 1.0)
+            increment = 1.0;
 
         double currCount;
         int currSkip,lastSkip = 0;
@@ -161,31 +207,40 @@ void vFastThread::run()
             }
 
             lastSkip = currSkip;
-            currCount += acceptableRatio;
+            currCount += increment; //acceptableRatio;
             currSkip = (int)currCount;
 
             auto ae = ev::is_event<ev::AE>(*qi);
-            ev::temporalSurface *cSurf;
+            //AE* ae = read_as<AE>(*qi);
+            yarp::sig::ImageOf< yarp::sig::PixelInt > *cSurf;
             if(ae->getChannel()) {
                 if(ae->polarity)
-                    cSurf = surfaceOfR;
+                    cSurf = &surfaceOfR;
                 else
-                    cSurf = surfaceOnR;
+                    cSurf = &surfaceOnR;
             } else {
                 if(ae->polarity)
-                    cSurf = surfaceOfL;
+                    cSurf = &surfaceOfL;
                 else
-                    cSurf = surfaceOnL;
+                    cSurf = &surfaceOnL;
             }
 
             //unwrap stamp and add the event to the surface
-            (*qi)->stamp = unwrapper(ae->stamp);
-            cSurf->fastAddEvent(*qi);
+            (*cSurf)(ae->x, ae->y) = unwrapper(ae->stamp);
+            //(*qi)->stamp = unwrapper(ae->stamp);
+            //cSurf->fastAddEvent(*qi);
+
+
 
             unsigned int patch3[16];
             unsigned int patch4[20];
-            cSurf->getEventsOnCircle3(patch3, ae->x, ae->y, circle3);
-            cSurf->getEventsOnCircle4(patch4, ae->x, ae->y, circle4);
+            getCircle3(cSurf, ae->x, ae->y, patch3, circle3);
+            getCircle4(cSurf, ae->x, ae->y, patch4, circle4);
+            //cSurf->getEventsOnCircle3(patch3, ae->x, ae->y, circle3);
+            //cSurf->getEventsOnCircle4(patch4, ae->x, ae->y, circle4);
+
+
+
             bool isc = detectcornerfast(patch3, patch4);
             countProcessed++;
 
@@ -235,13 +290,23 @@ void vFastThread::run()
 //                outthread.pushevent(ce, yarpstamp);
 //            }
 //        }
+        //static double prevtime = yarp::os::Time::now();
+        static double prevtime = yarpstamp.getTime();
 
         if(debugPort.getOutputCount()) {
+            //double time = yarp::os::Time::now();
+            double time = yarpstamp.getTime();
+
             yarp::os::Bottle &scorebottleout = debugPort.prepare();
             scorebottleout.clear();
-            scorebottleout.addDouble(allocatorCallback.queryDelayN());
+            scorebottleout.addDouble(allocatorCallback.queryRate());
+            scorebottleout.addDouble(countProcessed/(time-prevtime));
             scorebottleout.addDouble((double)countProcessed/q->size());
+            scorebottleout.addDouble(delay_n);
+            scorebottleout.addDouble(allocatorCallback.queryDelayT());
             debugPort.write();
+
+            prevtime = time;
         }
 
         allocatorCallback.scrapQ();

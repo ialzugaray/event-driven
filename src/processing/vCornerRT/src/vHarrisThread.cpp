@@ -4,7 +4,7 @@ using namespace ev;
 
 vHarrisThread::vHarrisThread(unsigned int height, unsigned int width, std::string name, bool strict, int qlen,
                              double temporalsize, int windowRad, int sobelsize, double sigma, double thresh,
-                             int nthreads, bool delayV, bool delayT, bool addToSurface)
+                             int nthreads, bool delayV, bool delayT, bool addToSurface, double gain)
 {
     std::cout << "Using HARRIS implementation..." << std::endl;
 
@@ -24,6 +24,9 @@ vHarrisThread::vHarrisThread(unsigned int height, unsigned int width, std::strin
     this->delayV = delayV;
     this->delayT = delayT;
     this->addToSurface = addToSurface;
+
+    //setting gain
+    this->gain = gain;
 
 //    surfaceleft.initialise(height, width);
 //    surfaceright.initialise(height, width);
@@ -88,11 +91,15 @@ bool vHarrisThread::threadInit()
 
 void vHarrisThread::onStop()
 {
+    vBottleOut.close();
+    debugPort.close();
     allocatorCallback.close();
     allocatorCallback.releaseDataLock();
 
-    for(int i = 0; i < nthreads; i++)
+    for(int i = 0; i < nthreads; i++) {
+        computeThreads[i]->stop();
         delete computeThreads[i];
+    }
 
     delete surfaceleft;
     delete surfaceright;
@@ -493,9 +500,9 @@ void vHarrisThread::onStop()
 void vHarrisThread::run()
 {
 
-    double gain = 0.3;
-    int minAcceptableDelay = 500;
-    while(true) {
+//    double gain = 1;
+    int minAcceptableDelay =  51200;
+    while(!isStopping()) {
 
         ev::vQueue *q = 0;
         while(!q && !isStopping()) {
@@ -504,9 +511,15 @@ void vHarrisThread::run()
         if(isStopping()) break;
 
         unsigned int delay_n = allocatorCallback.queryDelayN();
-        int desiredDelay = minAcceptableDelay + (int)(delay_n * gain);
-        double acceptableRatio = ((double)delay_n)/desiredDelay;
+//        int desiredDelay = minAcceptableDelay + (int)(delay_n * gain);
+//        double acceptableRatio = (int)(delay_n * gain); // ((double)delay_n)/desiredDelay;
 //        std::cout << desiredDelay << " " << acceptableRatio << std::endl;
+
+//        double increment = gain * (delay_n - q->size()) / minAcceptableDelay;
+        int maxV = 10000;
+        double increment = ((double)delay_n)/maxV;
+        if(increment < 1.0)
+            increment = 1;
 
         double currCount;
         int currSkip,lastSkip = 0;
@@ -527,7 +540,7 @@ void vHarrisThread::run()
             }
 
             lastSkip = currSkip;
-            currCount += acceptableRatio;
+            currCount += increment; // acceptableRatio;
             currSkip = (int)currCount;
 
             auto ae = ev::is_event<ev::AE>(*qi);
@@ -562,9 +575,11 @@ void vHarrisThread::run()
 
             yarp::os::Bottle &scorebottleout = debugPort.prepare();
             scorebottleout.clear();
+            scorebottleout.addDouble(allocatorCallback.queryRate());
             scorebottleout.addDouble(countProcessed/(time-prevtime));
             scorebottleout.addDouble((double)countProcessed/q->size());
             scorebottleout.addDouble(delay_n);
+            scorebottleout.addDouble(allocatorCallback.queryDelayT());
             debugPort.write();
 
             prevtime = time;
@@ -666,7 +681,7 @@ bool vComputeHarrisThread::available()
 
 void vComputeHarrisThread::run()
 {
-    while(true) {
+    while(!isStopping()) {
 
         //if no task is assigned, wait
         if(suspended) {
