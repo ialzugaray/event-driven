@@ -1,8 +1,4 @@
 cmake_minimum_required(VERSION 2.6)
-<<<<<<< HEAD
-
-=======
->>>>>>> master
 set(MODULENAME vCorner)
 project(${MODULENAME})
 
