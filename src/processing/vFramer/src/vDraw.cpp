@@ -1062,9 +1062,8 @@ void boundingDraw::draw(cv::Mat &image, const ev::vQueue &eSet, int vTime)
 
     }
 
-    if(pointsToTrack.size() != 0) {
+    if(pointsToTrack.size() == 0) return;
 
-    }
     int dx = 0;
     int dy = 0;
     std::vector < std::vector < double > > dist;
