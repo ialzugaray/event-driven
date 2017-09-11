@@ -591,8 +591,6 @@ void vHarrisThread::run()
 
 }
 
-
-
 //bool vCornerThread::detectcorner(ev::vQueue patch, int x, int y)
 //{
 
