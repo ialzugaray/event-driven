@@ -17,8 +17,6 @@
 
 #include "vCornerModule.h"
 
-//#include <iomanip>
-
 using namespace ev;
 
 /**********************************************************/
@@ -26,36 +24,62 @@ bool vCornerModule::configure(yarp::os::ResourceFinder &rf)
 {
     //set the name of the module
     std::string moduleName =
-            rf.check("name", yarp::os::Value("vCorner")).asString();
+            rf.check("name", yarp::os::Value("vCornerRT")).asString();
     yarp::os::RFModule::setName(moduleName.c_str());
 
     bool strict = rf.check("strict") &&
             rf.check("strict", yarp::os::Value(true)).asBool();
-    bool realtime = rf.check("realtime", yarp::os::Value(true)).asBool();
 
     /* set parameters */
     int height = rf.check("height", yarp::os::Value(128)).asInt();
     int width = rf.check("width", yarp::os::Value(128)).asInt();
     int sobelsize = rf.check("filterSize", yarp::os::Value(5)).asInt();
     unsigned int qlen = rf.check("qsize", yarp::os::Value(36)).asInt();
+    double temporalsize = rf.check("tempsize", yarp::os::Value(0.1)).asDouble();
     int windowRad = rf.check("spatial", yarp::os::Value(5)).asInt();
     double sigma = rf.check("sigma", yarp::os::Value(1.0)).asDouble();
-//    int nEvents = rf.check("nEvents", yarp::os::Value(5000)).asInt();
     double thresh = rf.check("thresh", yarp::os::Value(8.0)).asDouble();
-    bool repFlag = rf.check("repFlag", yarp::os::Value(true)).asBool();
-    int nthreads = rf.check("nthreads", yarp::os::Value(1)).asInt();
+    bool callback = rf.check("callback", yarp::os::Value(false)).asBool();
+    int nthreads = rf.check("nthreads", yarp::os::Value(2)).asInt();
+    bool harris = rf.check("harris", yarp::os::Value(false)).asBool();
+    bool fast = rf.check("fast", yarp::os::Value(false)).asBool();
+    double gain = rf.check("gain", yarp::os::Value(0.1)).asDouble();
 
     /* create the thread and pass pointers to the module parameters */
-    if(!realtime) {
-        cornerthread = 0;
-        cornercallback = new vCornerCallback(height, width, sobelsize, windowRad, sigma, qlen, thresh, repFlag);
-        return cornercallback->open(moduleName, strict);
+    if(callback) {
+
+        harristhread = 0;
+        fastthread = 0;
+
+        if(harris) {
+            fastcallback = 0;
+            harriscallback = new vHarrisCallback(height, width, temporalsize, qlen, sobelsize, windowRad, sigma, thresh);
+            return harriscallback->open(moduleName, strict);
+        }
+        else if(fast) {
+            harriscallback = 0;
+            fastcallback = new vFastCallback(height, width);
+            return fastcallback->open(moduleName, strict);
+        }
     }
     else {
-        cornercallback = 0;
-        cornerthread = new vCornerThread(height, width, moduleName, strict, qlen, windowRad, sobelsize, sigma, thresh, nthreads);
-        if(!cornerthread->start())
-            return false;
+
+        harriscallback = 0;
+        fastcallback = 0;
+
+        if(harris) {
+            fastthread = 0;
+            harristhread = new vHarrisThread(height, width, moduleName, strict, qlen, temporalsize,
+                                             windowRad, sobelsize, sigma, thresh, nthreads, gain);
+            if(!harristhread->start())
+                return false;
+        }
+        else if(fast) {
+            harristhread = 0;
+            fastthread = new vFastThread(height, width, moduleName, strict, gain);
+            if(!fastthread->start())
+                return false;
+        }
     }
 
     return true;
@@ -64,8 +88,10 @@ bool vCornerModule::configure(yarp::os::ResourceFinder &rf)
 /**********************************************************/
 bool vCornerModule::interruptModule()
 {
-    if(cornercallback) cornercallback->interrupt();
-    if(cornerthread) cornerthread->stop();
+    if(harriscallback) harriscallback->interrupt();
+    if(fastcallback) fastcallback->interrupt();
+    if(harristhread) harristhread->stop();
+    if(fastthread) fastthread->stop();
     yarp::os::RFModule::interruptModule();
     return true;
 }
@@ -73,11 +99,16 @@ bool vCornerModule::interruptModule()
 /**********************************************************/
 bool vCornerModule::close()
 {
-    if(cornercallback) {
-        cornercallback->close();
-        delete cornercallback;
+    if(harriscallback) {
+        harriscallback->close();
+        delete harriscallback;
     }
-    if(cornerthread) delete cornerthread;
+    if(fastcallback) {
+        fastcallback->close();
+        delete fastcallback;
+    }
+    if(harristhread) delete harristhread;
+    if(fastthread) delete fastthread;
     yarp::os::RFModule::close();
     return true;
 }

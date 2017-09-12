@@ -46,26 +46,21 @@ private:
     yarp::os::Stamp *ystamp_p;
     ev::temporalSurface *cSurf_p;
 
-    yarp::os::Mutex *semaphore;
-    yarp::os::Semaphore *mutex;
+    yarp::os::Semaphore *semaphore;
 
     yarp::os::Mutex *mutex_writer;
-    yarp::os::Mutex *trytoread;
     yarp::os::Mutex *mutex_reader;
     int *readcount;
 
-//    ev::vQueue *cPatch_p;
     ev::event<ev::AddressEvent> aep;
 
     bool suspended;
-
     bool detectcorner(int x, int y);
 
 public:
 
-    vComputeHarrisThread(int sobelsize, int windowRad, double sigma, double thresh, unsigned int qlen, ev::collectorPort *outthread, yarp::os::Mutex *semaphore,
-                    yarp::os::Mutex *mutex_writer, yarp::os::Mutex *trytoread, yarp::os::Mutex *mutex_reader, int *readcount);
-//    void setData(ev::temporalSurface *cSurf, yarp::os::Stamp ystamp);
+    vComputeHarrisThread(int sobelsize, int windowRad, double sigma, double thresh, unsigned int qlen, ev::collectorPort *outthread,
+                    yarp::os::Mutex *mutex_writer, yarp::os::Mutex *mutex_reader, int *readcount);
     void assignTask(ev::event<ev::AddressEvent> ae, ev::temporalSurface *cSurf, yarp::os::Stamp *ystamp);
     void suspend();
     void wakeup();
@@ -82,11 +77,9 @@ class vHarrisThread : public yarp::os::Thread
 private:
 
     //thread for queues of events
-    ev::queueAllocator allocatorCallback;
+    ev::queueAllocator inputPort;
 
     //data structures
-//    ev::historicalSurface surfaceleft;
-//    ev::historicalSurface surfaceright;
     ev::temporalSurface *surfaceleft;
     ev::temporalSurface *surfaceright;
 
@@ -100,19 +93,14 @@ private:
 
     //to protect the writing
     yarp::os::Mutex *mutex_writer;
-    yarp::os::Mutex *trytoread;
     yarp::os::Mutex *mutex_reader;
     int readcount;
-
-//    ev::vtsHelper unwrapper;
 
     //thread for the output
     ev::collectorPort outthread;
 
     //synchronising value
     yarp::os::Stamp yarpstamp;
-
-    int k;
 
     //parameters
     unsigned int height;
@@ -126,19 +114,15 @@ private:
     double sigma;
     double thresh;
     int nthreads;
-    bool delayV;
-    bool delayT;
-    bool addToSurface;
     double gain;
 
-    filters convolution;
     bool detectcorner(ev::vQueue patch, int x, int y);
 
 public:
 
     vHarrisThread(unsigned int height, unsigned int width, std::string name, bool strict, int qlen,
                   double temporalsize, int windowRad, int sobelsize, double sigma, double thresh,
-                  int nthreads, bool delayV, bool delayT, bool addToSurface, double gain);
+                  int nthreads, double gain);
     bool threadInit();
     bool open(std::string portname);
     void onStop();

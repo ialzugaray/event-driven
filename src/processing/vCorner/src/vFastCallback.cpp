@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2011 Department of Robotics Brain and Cognitive Sciences - Istituto Italiano di Tecnologia
- * Author: Valentina Vasco
+ * Author: Valentina Vasco based on Elias Mueggler's implementation
  * email:  valentina.vasco@iit.it
  * Permission is granted to copy, distribute, and/or modify this program
  * under the terms of the GNU General Public License, version 2 or any
@@ -26,10 +26,10 @@ vFastCallback::vFastCallback(int height, int width)
     this->height = height;
     this->width = width;
 
-    //create surface representations
-    std::cout << "Creating surfaces..." << std::endl;
-    surfaceleft = new temporalSurface(width, height);
-    surfaceright = new temporalSurface(width, height);
+    surfaceOfR.resize(width, height);
+    surfaceOnR.resize(width, height);
+    surfaceOfL.resize(width, height);
+    surfaceOnL.resize(width, height);
 
     this->tout = 0;
 
@@ -51,7 +51,7 @@ bool vFastCallback::open(const std::string moduleName, bool strictness)
     std::string outPortName = "/" + moduleName + "/vBottle:o";
     bool check2 = outPort.open(outPortName);
 
-    std::string debugPortName = "/" + moduleName + "/score:o";
+    std::string debugPortName = "/" + moduleName + "/debug:o";
     bool check3 = debugPort.open(debugPortName);
 
     return check1 && check2 && check3;
@@ -65,9 +65,6 @@ void vFastCallback::close()
     debugPort.close();
     outPort.close();
     yarp::os::BufferedPort<ev::vBottle>::close();
-
-    delete surfaceleft;
-    delete surfaceright;
 
 }
 
@@ -84,7 +81,6 @@ void vFastCallback::interrupt()
 /**********************************************************/
 void vFastCallback::onRead(ev::vBottle &bot)
 {
-    yarp::os::Stamp st;
     ev::vBottle fillerbottle;
     bool isc = false;
 
@@ -93,21 +89,29 @@ void vFastCallback::onRead(ev::vBottle &bot)
     for(ev::vQueue::iterator qi = q.begin(); qi != q.end(); qi++)
     {
         auto ae = is_event<AE>(*qi);
-        ev::temporalSurface *cSurf;
-
-        if(ae->getChannel() == 0)
-            cSurf = surfaceleft;
-        else
-            cSurf = surfaceright;
+        yarp::sig::ImageOf< yarp::sig::PixelInt > *cSurf;
+        if(ae->getChannel()) {
+            if(ae->polarity)
+                cSurf = &surfaceOfR;
+            else
+                cSurf = &surfaceOnR;
+        } else {
+            if(ae->polarity)
+                cSurf = &surfaceOfL;
+            else
+                cSurf = &surfaceOnL;
+        }
 
         //unwrap stamp and add the event to the surface
-        (*qi)->stamp = unwrapper(ae->stamp);
-        cSurf->fastAddEvent(*qi);
+        (*cSurf)(ae->x, ae->y) = unwrapper(ae->stamp);
 
+        //get events on circles
         unsigned int patch3[16];
         unsigned int patch4[20];
-        cSurf->getEventsOnCircle3(patch3, ae->x, ae->y, circle3);
-        cSurf->getEventsOnCircle4(patch4, ae->x, ae->y, circle4);
+        getCircle3(cSurf, ae->x, ae->y, patch3, circle3);
+        getCircle4(cSurf, ae->x, ae->y, patch4, circle4);
+
+        //detect corner
         isc = detectcornerfast(patch3, patch4);
 
         //if it's a corner, add it to the output bottle
@@ -134,6 +138,35 @@ void vFastCallback::onRead(ev::vBottle &bot)
         outPort.write(strictness);
         fillerbottle.clear();
         tout = yarp::os::Time::now();
+    }
+
+}
+
+/**********************************************************/
+void vFastCallback::getCircle3(yarp::sig::ImageOf<yarp::sig::PixelInt> *cSurf, int x, int y, unsigned int (&p3)[16], int (&circle3)[16][2])
+{
+    for (int i = 0; i < 16; i++) {
+        int xi = x + circle3[i][0];
+        int yi = y + circle3[i][1];
+        if(xi < 0 || yi < 0 || xi >= width || yi >= height)
+            continue;
+
+        p3[i] = (*cSurf)(xi, yi);
+
+    }
+
+}
+
+/**********************************************************/
+void vFastCallback::getCircle4(yarp::sig::ImageOf<yarp::sig::PixelInt> *cSurf, int x, int y, unsigned int (&p4)[20], int (&circle4)[20][2])
+{
+    for (int i = 0; i < 20; i++) {
+        int xi = x + circle4[i][0];
+        int yi = y + circle4[i][1];
+        if(xi < 0 || yi < 0 || xi >= width || yi >= height)
+            continue;
+
+        p4[i] = (*cSurf)(xi, yi);
     }
 
 }

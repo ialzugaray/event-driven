@@ -20,8 +20,8 @@
 /// \ingroup Modules
 /// \brief detects corner events using the Harris method
 
-#ifndef __VFASTCALLBACK__
-#define __VFASTCALLBACK__
+#ifndef __VHARRISCALLBACK__
+#define __VHARRISCALLBACK__
 
 #include <yarp/os/all.h>
 #include <yarp/sig/all.h>
@@ -33,7 +33,7 @@
 #include <math.h>
 #include <iomanip>
 
-class vFastCallback : public yarp::os::BufferedPort<ev::vBottle>
+class vHarrisCallback : public yarp::os::BufferedPort<ev::vBottle>
 {
 private:
 
@@ -50,61 +50,20 @@ private:
     //parameters
     int height;
     int width;
-
-    ev::vtsHelper unwrapper;
+    unsigned int qlen;
+    int temporalsize;
+    int windowRad;
+    double thresh;
 
     double tout;
 
-    //pixels on the circles
-    int circle3[16][2] =
-    {
-        {0, 3},
-        {1, 3},
-        {2, 2},
-        {3, 1},
-        {3, 0},
-        {3, -1},
-        {2, -2},
-        {1, -3},
-        {0, -3},
-        {-1, -3},
-        {-2, -2},
-        {-3, -1},
-        {-3, 0},
-        {-3, 1},
-        {-2, 2},
-        {-1, 3}
-    };
-
-    int circle4[20][2] =
-    {
-        {0, 4},
-        {1, 4},
-        {2, 3},
-        {3, 2},
-        {4, 1},
-        {4, 0},
-        {4, -1},
-        {3, -2},
-        {2, -3},
-        {1, -4},
-        {0, -4},
-        {-1, -4},
-        {-2, -3},
-        {-3, -2},
-        {-4, -1},
-        {-4, 0},
-        {-4, 1},
-        {-3, 2},
-        {-2, 3},
-        {-1, 4}
-    };
-
-    bool detectcornerfast(unsigned int patch3[16], unsigned int patch4[20]);
+    filters convolution;
+    bool detectcorner(const ev::vQueue subsurf, int x, int y);
 
 public:
 
-    vFastCallback(int height, int width);
+    vHarrisCallback(int height, int width, double temporalsize, int qlen,
+                    int filterSize, int windowRad, double sigma, double thresh);
 
     bool    open(const std::string moduleName, bool strictness = false);
     void    close();

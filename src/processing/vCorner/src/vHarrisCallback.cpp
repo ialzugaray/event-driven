@@ -50,8 +50,8 @@ vHarrisCallback::vHarrisCallback(int height, int width, double temporalsize, int
 
     //create surface representations
     std::cout << "Creating surfaces..." << std::endl;
-    surfaceleft = new temporalSurface(width, height); //, this->temporalsize);
-    surfaceright = new temporalSurface(width, height); // , this->temporalsize);
+    surfaceleft = new temporalSurface(width, height, this->temporalsize);
+    surfaceright = new temporalSurface(width, height, this->temporalsize);
 
     this->tout = 0;
 
@@ -73,10 +73,8 @@ bool vHarrisCallback::open(const std::string moduleName, bool strictness)
     std::string outPortName = "/" + moduleName + "/vBottle:o";
     bool check2 = outPort.open(outPortName);
 
-    std::string debugPortName = "/" + moduleName + "/score:o";
+    std::string debugPortName = "/" + moduleName + "/debug:o";
     bool check3 = debugPort.open(debugPortName);
-
-//    outfile.open("/home/vvasco/dev/egomotion/affine/testing data/corners.txt");
 
     return check1 && check2 && check3;
 
@@ -89,8 +87,6 @@ void vHarrisCallback::close()
     debugPort.close();
     outPort.close();
     yarp::os::BufferedPort<ev::vBottle>::close();
-
-//    outfile.close();
 
     delete surfaceleft;
     delete surfaceright;
@@ -110,7 +106,6 @@ void vHarrisCallback::interrupt()
 /**********************************************************/
 void vHarrisCallback::onRead(ev::vBottle &bot)
 {
-    yarp::os::Stamp st;
     ev::vBottle fillerbottle;
     bool isc = false;
 
@@ -127,24 +122,15 @@ void vHarrisCallback::onRead(ev::vBottle &bot)
         cSurf->fastAddEvent(*qi);
 
         vQueue subsurf;
-//        cSurf->getSurf(subsurf, windowRad);
         subsurf = cSurf->getSurf_Clim(qlen, ae->x, ae->y, windowRad);
         isc = detectcorner(subsurf, ae->x, ae->y);
-
-        //            this->getEnvelope(st);
-        //            outfile << ae->channel << " " << unwrapper(ae->stamp) << " " << ae->polarity << " "
-        //                    << ae->x << " " << ae->y << " " << std::setprecision(15) << st.getTime() << " ";
 
         //if it's a corner, add it to the output bottle
         if(isc) {
             auto ce = make_event<LabelledAE>(ae);
             ce->ID = 1;
             fillerbottle.addEvent(ce);
-
-//            outfile << ce->ID << std::endl;
         }
-//        else
-//            outfile << 0 << std::endl;
 
         if(debugPort.getOutputCount()) {
             yarp::os::Bottle &scorebottleout = debugPort.prepare();
@@ -190,8 +176,6 @@ bool vHarrisCallback::detectcorner(const vQueue subsurf, int x, int y)
 
     //reset responses
     convolution.reset();
-
-//    std::cout << score << std::endl;
 
     //if score > thresh tag ae as ce
     return score > thresh;

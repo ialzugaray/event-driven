@@ -20,28 +20,25 @@
 /// \ingroup Modules
 /// \brief detects corner events using the Harris method
 
-#ifndef __VCORNERMODULE__
-#define __VCORNERMODULE__
+#ifndef __VCORNERRTMODULE__
+#define __VCORNERRTMODULE__
 
 #include <yarp/os/all.h>
-//#include <yarp/sig/all.h>
-//#include <yarp/math/Math.h>
 #include <iCub/eventdriven/all.h>
-//#include <iCub/eventdriven/vtsHelper.h>
-//#include <filters.h>
-//#include <localQueue.h>
-//#include <queueSet.h>
 #include <fstream>
-//#include <math.h>
-#include <vCornerThread.h>
-#include <vCornerCallback.h>
+#include <vHarrisCallback.h>
+#include <vFastCallback.h>
+#include <vHarrisThread.h>
+#include <vFastThread.h>
 
 class vCornerModule : public yarp::os::RFModule
 {
 
     //the event bottle input and output handler
-    vCornerCallback      *cornercallback;
-    vCornerThread       *cornerthread;
+    vHarrisCallback     *harriscallback;
+    vFastCallback       *fastcallback;
+    vHarrisThread       *harristhread;
+    vFastThread         *fastthread;
 
 public:
 

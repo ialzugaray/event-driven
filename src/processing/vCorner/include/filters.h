@@ -34,9 +34,6 @@ private:
     int sobelsize;
     int sobelrad;
 
-    //parameters for gaussian filter
-//    double sigma;
-
     //parameters of the final response
     int rx;
     int ry;
@@ -48,6 +45,7 @@ private:
     double dy;
     double dxy;
 
+    //matrices to store filters and responses
     yarp::sig::Matrix sobelx;
     yarp::sig::Matrix sobely;
     yarp::sig::Matrix gaussian;
@@ -56,8 +54,7 @@ private:
 
 public:
 
-    filters();
-
+    filters() {}
     void configure(int sobelsize, int l);
     void setFilterCenter(int cx, int cy);
     void setResponseCenter(int rx, int ry);
