@@ -24,7 +24,7 @@ bool vCornerModule::configure(yarp::os::ResourceFinder &rf)
 {
     //set the name of the module
     std::string moduleName =
-            rf.check("name", yarp::os::Value("vCornerRT")).asString();
+            rf.check("name", yarp::os::Value("vCorner")).asString();
     yarp::os::RFModule::setName(moduleName.c_str());
 
     bool strict = rf.check("strict") &&
