@@ -13,11 +13,17 @@
     <node> icub23 </node>
 </module>
 
-    <module>
-        <name> vCorner </name>
-        <parameters> --strict --width 304 --height 240 --spatial 3 --qsize 25 --nthreads 8 --allToSurf false </parameters>
-        <node> icub23 </node>
-    </module>
+<module>
+    <name>vCorner</name>
+    <parameters>--strict --harris true --spatial 4 --nthreads 8 --qsize 25</parameters>
+    <node>icub23</node>
+</module>
+
+<module>
+    <name>vCorner</name>
+    <parameters>--strict --fast true</parameters>
+    <node>icub23</node>
+</module>
 
 <module>
     <name> vFramer</name>

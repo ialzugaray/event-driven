@@ -31,8 +31,8 @@ bool vCornerModule::configure(yarp::os::ResourceFinder &rf)
             rf.check("strict", yarp::os::Value(true)).asBool();
 
     /* set parameters */
-    int height = rf.check("height", yarp::os::Value(128)).asInt();
-    int width = rf.check("width", yarp::os::Value(128)).asInt();
+    int height = rf.check("height", yarp::os::Value(240)).asInt();
+    int width = rf.check("width", yarp::os::Value(304)).asInt();
     int sobelsize = rf.check("filterSize", yarp::os::Value(5)).asInt();
     unsigned int qlen = rf.check("qsize", yarp::os::Value(36)).asInt();
     double temporalsize = rf.check("tempsize", yarp::os::Value(0.1)).asDouble();
@@ -42,7 +42,7 @@ bool vCornerModule::configure(yarp::os::ResourceFinder &rf)
     bool callback = rf.check("callback", yarp::os::Value(false)).asBool();
     int nthreads = rf.check("nthreads", yarp::os::Value(2)).asInt();
     bool harris = rf.check("harris", yarp::os::Value(false)).asBool();
-    bool fast = rf.check("fast", yarp::os::Value(false)).asBool();
+    bool fast = rf.check("fast", yarp::os::Value(true)).asBool();
     double gain = rf.check("gain", yarp::os::Value(0.1)).asDouble();
 
     /* create the thread and pass pointers to the module parameters */
