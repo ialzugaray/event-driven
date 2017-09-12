@@ -47,7 +47,6 @@ bool vFastThread::threadInit()
 
 void vFastThread::onStop()
 {
-    vBottleOut.close();
     debugPort.close();
     inputPort.close();
     inputPort.releaseDataLock();

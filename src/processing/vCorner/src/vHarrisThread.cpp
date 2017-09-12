@@ -71,7 +71,6 @@ bool vHarrisThread::threadInit()
 
 void vHarrisThread::onStop()
 {
-    vBottleOut.close();
     debugPort.close();
     inputPort.close();
     inputPort.releaseDataLock();

@@ -83,8 +83,7 @@ private:
     ev::temporalSurface *surfaceleft;
     ev::temporalSurface *surfaceright;
 
-    //output port for the vBottle with the new events computed by the module
-    yarp::os::BufferedPort<ev::vBottle> vBottleOut;
+    //port for debugging
     yarp::os::BufferedPort<yarp::os::Bottle> debugPort;
 
     //list of thread for processing

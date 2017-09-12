@@ -38,7 +38,6 @@ private:
     ev::queueAllocator inputPort;
 
     //ports
-    yarp::os::BufferedPort<ev::vBottle> vBottleOut;
     yarp::os::BufferedPort<yarp::os::Bottle> debugPort;
 
     //data structures
