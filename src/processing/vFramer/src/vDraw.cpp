@@ -41,8 +41,6 @@ vDraw * createDrawer(std::string tag)
         return new blobDraw();
     if(tag == isoInterestDraw::drawtype)
         return new isoInterestDraw();
-    if(tag == predDraw::drawtype)
-        return new predDraw();
     if(tag == boundingDraw::drawtype)
         return new boundingDraw();
     return 0;
@@ -860,150 +858,9 @@ void isoInterestDraw::draw(cv::Mat &image, const ev::vQueue &eSet, int vTime)
 
     image = isoimage - baseimage;
 
-
-
-//    cv::Mat isoimage = baseimage.clone();
-//    isoimage.setTo(255);
-
-//    if(checkStagnancy(eSet) > clearThreshold) {
-//        return;
-//    }
-
-//    if(eSet.empty()) return;
-
-//    int cts = eSet.back()->stamp;
-//    int dt = cts - eSet.front()->stamp;
-//    if(dt < 0) dt += ev::vtsHelper::maxStamp();
-//    maxdt = std::max(maxdt, dt);
-
-//    int r = 1;
-//    CvScalar c1 = CV_RGB(255, 0, 0);
-//    CvScalar c2 = CV_RGB(0, 255, 255);
-//    ev::vQueue::const_iterator qi;
-//    for(qi = eSet.begin(); qi != eSet.end(); qi++) {
-//        auto cep = is_event<LabelledAE>(*qi);
-
-//        //transform values
-//        int dt = cts - cep->stamp;
-//        if(dt < 0) dt += ev::vtsHelper::maxStamp();
-//        dt = ((double)dt / maxdt) * Zlimit + 0.5;
-//        int px = cep->x;
-//        int py = cep->y;
-//        if(flip) {
-//            px = Xlimit - 1 - px;
-//            py = Ylimit - 1 - py;
-//        }
-//        int pz = dt;
-//        pttr(px, py, pz);
-//        px += imagexshift;
-//        py += imageyshift;
-
-//        if(px < 0 || px >= imagewidth || py < 0 || py >= imageheight) {
-//            continue;
-//        }
-
-//        cv::Point centr(px, py);
-//        if(cep->ID == 1)
-//            cv::circle(image, centr, r, c1);
-//        else
-//            cv::circle(image, centr, r, c2);
-
-////        isoimage.at<cv::Vec3b>(py, px) = cv::Vec3b(0, 0, 255);
-//    }
-
-//    if(!image.empty()) {
-//        for(int y = 0; y < image.rows; y++) {
-//            for(int x = 0; x < image.cols; x++) {
-//                cv::Vec3b &pixel = image.at<cv::Vec3b>(y, x);
-
-//                if(pixel[0] != 255 || pixel[1] != 255 || pixel[2] != 255) {
-
-//                    int px = x, py = y;
-//                    if(px < 0 || px >= imagewidth || py < 0 || py >= imageheight)
-//                        continue;
-
-//                    isoimage.at<cv::Vec3b>(py, px) = pixel;
-//                }
-//            }
-//        }
-//    }
-
-
-
-//    image = isoimage - baseimage;
-
 }
 
 /********************************************************/
-const std::string predDraw::drawtype = "PRED";
-
-std::string predDraw::getDrawType()
-{
-    return predDraw::drawtype;
-}
-
-std::string predDraw::getEventType()
-{
-    return FlowEvent::tag;
-}
-
-void predDraw::draw(cv::Mat &image, const vQueue &eSet, int vTime)
-{
-    if(image.empty()) {
-        image = cv::Mat(Ylimit, Xlimit, CV_8UC3);
-        image.setTo(255);
-    }
-
-    if(eSet.empty()) return;
-    if(checkStagnancy(eSet) > clearThreshold) return;
-
-    cv::Scalar line_color = CV_RGB(255,0,0);
-    cv::Point p_start,p_end;
-
-    vQueue::const_reverse_iterator qi;
-    for(qi = eSet.rbegin(); qi != eSet.rend(); qi++) {
-
-        int dt = eSet.back()->stamp - (*qi)->stamp;
-        if(dt < 0) dt += ev::vtsHelper::max_stamp;
-        if(dt > twindow/4) break;
-
-        auto ofp = is_event<ev::FlowEvent>(*qi);
-
-        int x = ofp->x;
-        int y = ofp->y;
-        float vx = ofp->vx;
-        float vy = ofp->vy;
-
-        if(flip) {
-            x = Xlimit - 1 - x;
-            y = Ylimit - 1 - y;
-            double temp;
-            temp = vx;
-            vx = vy;
-            vy = temp;
-        }
-
-        p_start.x = Xlimit/2;
-        p_start.y = Ylimit/2;
-        double h = 15;
-        double theta = atan2(vy, vx);
-        p_end.x = (int) (p_start.x + h * sin(theta));
-        p_end.y = (int) (p_start.y + h * cos(theta));
-
-        cv::line(image, p_start, p_end, line_color, 1, 4);
-
-        //Draw the tips of the arrow
-        p_start.x = (int) (p_end.x - 5*sin(theta + M_PI/4));
-        p_start.y = (int) (p_end.y - 5*cos(theta + M_PI/4));
-        cv::line(image, p_start, p_end, line_color, 1, 4);
-
-        p_start.x = (int) (p_end.x - 5*sin(theta - M_PI/4));
-        p_start.y = (int) (p_end.y - 5*cos(theta - M_PI/4));
-        cv::line(image, p_start, p_end, line_color, 1, 4);
-    }
-
-}
-
 const std::string boundingDraw::drawtype = "BOUND";
 
 std::string boundingDraw::getDrawType()

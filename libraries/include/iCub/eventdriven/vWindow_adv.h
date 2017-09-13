@@ -34,17 +34,15 @@ protected:
     //! event storage
     vQueue q;
 
+    //! for quick spatial accessing and surfacing
+    std::vector< std::vector < event<> > > spatial;
+
     //!retina size
     int width;
     int height;
 
-    //! for quick spatial accessing and surfacing
-    std::vector< std::vector < event<> > > spatial;
-
     //! active events
     int count;
-
-    ev::vtsHelper unwrapper;
 
 public:
 
@@ -80,10 +78,10 @@ public:
     /// \brief getWindow
     /// \return
     ///
-    void getSurf(vQueue &qcopy);
+    vQueue getSurf();
 
 
-    void getSurf(vQueue &qcopy, int d);
+    vQueue getSurf(int d);
 
     ///
     /// \brief getSpatialWindow returns AddressEvents within a spatial window
@@ -92,7 +90,7 @@ public:
     /// \param d distance of the half-length of a square window
     /// \return a vQueue containing a copy of the events
     ///
-    void getSurf(vQueue &qcopy, int x, int y, int d);
+    vQueue getSurf(int x, int y, int d);
 
     ///
     /// \brief getSpatialWindow returns AddressEvents within a spatial window
@@ -102,7 +100,7 @@ public:
     /// \param yh upper y value of window
     /// \return a vQueue containing a copy of the events
     ///
-    void getSurf(vQueue &qcopy, int xl, int xh, int yl, int yh);
+    vQueue getSurf(int xl, int xh, int yl, int yh);
 
     vQueue getSurf_Tlim(int dt);
     vQueue getSurf_Tlim(int dt, int d);
@@ -115,11 +113,6 @@ public:
     vQueue getSurf_Clim(int c, int xl, int xh, int yl, int yh);
 
     void getSurfSorted(vQueue &fillq);
-
-    event<> getSpatial(int x, int y);
-    void getEventsOnCircle3(unsigned int (&patch3)[16], int x, int y, int (&circle)[16][2]);
-    void getEventsOnCircle4(unsigned int (&patch4)[20], int x, int y, int (&circle)[20][2]);
-
 
 };
 /******************************************************************************/
