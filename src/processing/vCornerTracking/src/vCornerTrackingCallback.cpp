@@ -27,6 +27,7 @@ vCornerTrackingCallback::vCornerTrackingCallback(int height, int width, int mind
     this->maxdistance = maxdistance;
     this->trefresh = trefresh;
     this->minevts = minevts;
+    this->maxsize = maxsize;
     clusterSet = new clusterPool(mindistance, maxdistance, trefresh, maxsize, minevts);
 
 }
@@ -89,11 +90,13 @@ void vCornerTrackingCallback::onRead(ev::vBottle &bot)
         //current corner event
         auto cep = is_event<LabelledAE>(*qi);
 
-        unsigned int currt = unwrapper(cep->stamp);
+        //unwrap timestamp
+        double currt = vtsHelper::tsscaler * unwrapper(cep->stamp);
 
         //update cluster velocity
         vel = clusterSet->update(cep, currt);
 
+//        std::cout << currt << " " << vel.first << " " << vel.second << std::endl;
         if(vel.first && vel.second) {
             //create new flow event and assign to it the velocity of the current cluster
             auto fe = make_event<FlowEvent>(cep);

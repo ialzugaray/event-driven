@@ -259,7 +259,7 @@ void vEgomotionThread::run()
         for(unsigned int b = 0; b < encvels.size(); b++)
         {
             encveltest[b].index = b + 1;
-            if(abs(encvels[b]) < pow(10, -15)) {
+            if(abs(encvels[b]) < pow(10, -5)) {
                 countNotMoving++;
             }
             encveltest[b].value = (encvels[b] - min_j[b]) / range_j[b];
@@ -284,6 +284,8 @@ void vEgomotionThread::run()
             pred_covv(0, 1) = 0;
             pred_covv(1, 1) = 1;
         }
+
+//        double pred_mag = sqrt(pred_meanv(0)*pred_meanv(0) + pred_meanv(1)*pred_meanv(1));
 
 //        static int counter = 0;
 //        if(counter++ > 100) {
@@ -342,7 +344,7 @@ void vEgomotionThread::run()
 ////                    weight = 10;
 ////                }
 ////                else
-                    weight = 1;
+                    weight = 1; // pred_mag/80.0;
 
                 //compute metric
                 isindependent = detect_independent(ofp, pred_meanv, pred_covv, mah_dist, cos_dist, weight);

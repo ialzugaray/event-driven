@@ -37,6 +37,10 @@ std::pair <double, double> clusterPool::update(ev::event<ev::LabelledAE> evt, do
     clustervel.first = 0.0;
     clustervel.second = 0.0;
 
+//    if(pool.size() > 300) {
+//        pool.clear();
+//    }
+
     //if it's the first event, we create the first cluster
     if(firstevent) {
         firstevent = false;
@@ -62,7 +66,7 @@ std::pair <double, double> clusterPool::update(ev::event<ev::LabelledAE> evt, do
             //add event to the minimum distance cluster
             if(pool[clusterID].addEvent(evt, currt)) {
                 //start tracking cluster
-                if(pool[clusterID].getClusterSize() > minevts) { // && pool[clusterID].getSpatialDist(evt) > 3.0) {
+                if(pool[clusterID].getClusterSize() > minevts && pool[clusterID].getSpatialDist(evt) > 3.0) {
                     pool[clusterID].fitLine();
                     clustervel.first = pool[clusterID].getVx() * 1000000.0;
                     clustervel.second = pool[clusterID].getVy() * 1000000.0;

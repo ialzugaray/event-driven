@@ -55,7 +55,7 @@ void vCornerTrackingThread::onStop()
 
 void vCornerTrackingThread::run()
 {
-
+//    int minAcceptableDelay =  5120;
     while(true) {
 
         ev::vQueue *q = 0;
@@ -64,10 +64,36 @@ void vCornerTrackingThread::run()
         }
         if(isStopping()) break;
 
+//        unsigned int delay_n = inputPort.queryDelayN();
+////        double increment = ((double)delay_n)/maxV;
+
+//        double increment = 1.0 * (delay_n - q->size()) / minAcceptableDelay;
+//        if(increment < 1.0)
+//            increment = 1.0;
+
+//        double currCount;
+//        int currSkip,lastSkip = 0;
+//        currCount = 0.0;
+//        currSkip = (int)currCount;
+
+//        int countProcessed = 0;
+//        bool firstChecked = false;
+//        ev::vQueue::iterator qi;
         std::pair <double, double> vel;
-//        double vx = 0.0;
-//        double vy = 0.0;
-//        int count = 0;
+//        while(currSkip < q->size())  {
+
+//            if(!firstChecked) {
+//                qi = q->begin();
+//                firstChecked = true;
+//            } else {
+//                qi = qi + (currSkip - lastSkip);
+//                lastSkip = currSkip;
+//            }
+
+//            lastSkip = currSkip;
+//            currCount += increment;
+//            currSkip = (int)currCount;
+
 
         for(ev::vQueue::iterator qi = q->begin(); qi != q->end(); qi++) {
 
@@ -76,11 +102,9 @@ void vCornerTrackingThread::run()
 
             //unwrap timestamp
             double currt = vtsHelper::tsscaler * unwrapper(cep->stamp);
-//            std::cout << currt << std::endl;
 
             //update cluster velocity
             vel = clusterSet->update(cep, currt);
-//            vel = clusterSet->updateNew(cep, currt);
 
             //we output velocity if they are both non-zero
             if(vel.first && vel.second) {
@@ -98,15 +122,8 @@ void vCornerTrackingThread::run()
 //                    distbottleout.addDouble(deltat);
                     debugPort.write();
                 }
-
-//                vx += vel.first;
-//                vy += vel.second;
-//                count++;
             }
         }
-
-//        vx = vx / count;
-//        vy = vy / count;
 
         inputPort.scrapQ();
 
