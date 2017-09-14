@@ -39,13 +39,15 @@ class vCornerTrackingThread : public yarp::os::Thread
 private:
 
     //thread for queues of events
-    ev::queueAllocator allocatorCallback;
+    ev::queueAllocator inputPort;
 
     //thread for the output
     ev::collectorPort outthread;
 
+    //port for debugging
     yarp::os::BufferedPort<yarp::os::Bottle> debugPort;
 
+    //for timestamp unwrapping
     ev::vtsHelper unwrapper;
 
 //    //synchronising value
@@ -70,7 +72,6 @@ private:
     //set of clusters
     clusterPool *clusterSet;
 
-//    std::ofstream outfile;
 
 public:
 
@@ -78,9 +79,9 @@ public:
                           double mindistance, double maxdistance, double trefresh, int maxsize, int minevts);
     bool threadInit();
     bool open(std::string portname);
+    void threadRelease() {}
     void onStop();
     void run();
-//    void threadRelease();
 
 };
 

@@ -31,8 +31,8 @@ bool vCornerTrackingModule::configure(yarp::os::ResourceFinder &rf)
             rf.check("strict", yarp::os::Value(true)).asBool();
 
     /* set parameters */
-    unsigned int height = rf.check("height", yarp::os::Value(128)).asInt();
-    unsigned int width = rf.check("width", yarp::os::Value(128)).asInt();
+    unsigned int height = rf.check("height", yarp::os::Value(240)).asInt();
+    unsigned int width = rf.check("width", yarp::os::Value(304)).asInt();
     double mindistance = rf.check("mindist", yarp::os::Value(3.0)).asDouble();
     double maxdistance = rf.check("maxdist", yarp::os::Value(12.0)).asDouble();
     double trefresh = rf.check("trefresh", yarp::os::Value(1.0)).asDouble();

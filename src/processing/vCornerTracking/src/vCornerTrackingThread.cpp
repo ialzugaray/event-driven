@@ -16,14 +16,12 @@ vCornerTrackingThread::vCornerTrackingThread(unsigned int height, unsigned int w
     this->minevts = minevts;
     clusterSet = new clusterPool(mindistance, maxdistance, trefresh, maxsize, minevts);
 
-//    outfile.open("clustersvel.txt");
-
 }
 
 bool vCornerTrackingThread::threadInit()
 {
 
-    if(!allocatorCallback.open("/" + name + "/vBottle:i")) {
+    if(!inputPort.open("/" + name + "/vBottle:i")) {
     std::cout << "could not open vBottleIn port " << std::endl;
         return false;
     }
@@ -48,17 +46,12 @@ bool vCornerTrackingThread::threadInit()
 
 void vCornerTrackingThread::onStop()
 {
-    allocatorCallback.close();
-    allocatorCallback.releaseDataLock();
+    inputPort.close();
+    inputPort.releaseDataLock();
     outthread.stop();
     delete clusterSet;
 }
 
-//void vCornerTrackingThread::threadRelease()
-//{
-//    delete clusterSet;
-////    outfile.close();
-//}
 
 void vCornerTrackingThread::run()
 {
@@ -67,7 +60,7 @@ void vCornerTrackingThread::run()
 
         ev::vQueue *q = 0;
         while(!q && !isStopping()) {
-            q = allocatorCallback.getNextQ(yarpstamp);
+            q = inputPort.getNextQ(yarpstamp);
         }
         if(isStopping()) break;
 
@@ -96,14 +89,12 @@ void vCornerTrackingThread::run()
                 fe->vx = vel.first;
                 fe->vy = vel.second;
 
-//                outfile << currt * vtsHelper::tsscaler << " " << vel.first * 1000000 << " " << vel.second * 1000000 << std::endl;
-
                 outthread.pushevent(fe, yarpstamp);
 
                 if(debugPort.getOutputCount()) {
                     yarp::os::Bottle &distbottleout = debugPort.prepare();
                     distbottleout.clear();
-                    distbottleout.addDouble(allocatorCallback.queryDelayN());
+                    distbottleout.addDouble(inputPort.queryDelayN());
 //                    distbottleout.addDouble(deltat);
                     debugPort.write();
                 }
@@ -117,7 +108,7 @@ void vCornerTrackingThread::run()
 //        vx = vx / count;
 //        vy = vy / count;
 
-        allocatorCallback.scrapQ();
+        inputPort.scrapQ();
 
     }
 
