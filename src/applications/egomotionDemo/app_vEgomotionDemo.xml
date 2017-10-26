@@ -17,26 +17,26 @@
 </module>
 
 <module>
-    <name>vCornerRT</name>
-    <parameters>--strict --width 304 --height 240 --harris true --spatial 4 --nthreads 8 --allToSurf false --qsize 25</parameters>
+    <name>vCorner</name>
+    <parameters>--strict --harris true --spatial 4 --nthreads 8 --qsize 25</parameters>
     <node>icub23</node>
 </module>
 
 <module>
-    <name>vCornerRT</name>
-    <parameters>--strict --width 304 --height 240 --fast true</parameters>
+    <name>vCorner</name>
+    <parameters>--strict --fast true --gain 0.25</parameters>
     <node>icub23</node>
 </module>
 
 <module>
     <name>vCornerTracking</name>
-    <parameters> --strict --width 304 --height 240 --minevts 8 --trefresh 0.05</parameters>
+    <parameters> --strict --minevts 10 --trefresh 0.05 --mindist 4.0</parameters>
     <node>icub23</node>
 </module>
 
 <module>
     <name>vEgomotion</name>
-    <parameters>--thresh_mag 4.0 </parameters>
+    <parameters>--thresh_mag 7.0 </parameters>
     <node>icub23</node>
 </module>
 
@@ -54,19 +54,19 @@
 
 <module>
     <name> vFramer</name>
-    <parameters> --frameRate 30 --eventWindow 0.1 --displays "(1 /flow (AE AE-INT FLOW BOUND) 1 /right (AE AE-INT ISO ISO-INT))"</parameters>
+    <parameters> --frameRate 30 --eventWindow 0.1 --displays "(1 /bound (AE BOUND) 1 /independent (AE AE-INT))"</parameters>
     <node>icub24</node>
 </module>
 
 <module>
    <name> yarpview </name>
-   <parameters>--name /viewCh0 --x 30 --y 30 --w 608 --h 480 --RefreshTime 33 </parameters>
+   <parameters>--name /viewBound --x 30 --y 30 --w 608 --h 480 --RefreshTime 33 </parameters>
    <node>icub24</node>
 </module>
 
 <module>
    <name> yarpview </name>
-   <parameters>--name /viewCh1 --x 648 --y 30 --w 608 --h 480 --RefreshTime 33 </parameters>
+   <parameters>--name /viewIndependent --x 648 --y 30 --w 608 --h 480 --RefreshTime 33 </parameters>
    <node>icub24</node>
 </module>
 
@@ -90,12 +90,12 @@
 
 <connection>
   <from>/vPreProcess/vBottle:o</from>
-  <to>/vCornerRT/vBottle:i</to>
+  <to>/vCorner/vBottle:i</to>
   <protocol> udp </protocol>
 </connection>
 
 <connection>
-  <from>/vCornerRT/vBottle:o</from>
+  <from>/vCorner/vBottle:o</from>
   <to>/vCornerTracking/vBottle:i</to>
   <protocol>udp</protocol>
 </connection>
@@ -119,7 +119,7 @@
 </connection>
 
 <connection>
-  <from>/vCornerRT/vBottle:o</from>
+  <from>/vCorner/vBottle:o</from>
   <to>/vFramer/LAE:i</to>
   <protocol>udp</protocol>
 </connection>
@@ -137,20 +137,20 @@
 </connection>
 
 <connection>
-  <from>/vEgomotion/vBottle:o</from>
+  <from>/vFramer/target:o</from>
   <to>/vEgomotionDemo/vBottle:i</to>
   <protocol>udp</protocol>
 </connection>
 
 <connection>
-  <from>/vFramer/flow</from>
-  <to>/viewCh0</to>
+  <from>/vFramer/bound</from>
+  <to>/viewBound</to>
   <protocol>udp</protocol>
 </connection>
 
 <connection>
-  <from>/vFramer/right</from>
-  <to>/viewCh1</to>
+  <from>/vFramer/independent</from>
+  <to>/viewIndependent</to>
   <protocol>udp</protocol>
 </connection>
 

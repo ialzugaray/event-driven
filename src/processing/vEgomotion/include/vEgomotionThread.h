@@ -118,11 +118,11 @@ private:
     int nthreads;
 
     //pre-trained models
-    const char *mu_vx_file = "/usr/local/src/robot/event-driven/build/bin/muvx.scale.model";
-    const char *mu_vy_file = "/usr/local/src/robot/event-driven/build/bin/muvy.scale.model";
-    const char *sigma_vx_file = "/usr/local/src/robot/event-driven/build/bin/sigmavx.scale.model";
-    const char *sigma_vy_file = "/usr/local/src/robot/event-driven/build/bin/sigmavy.scale.model";
-    const char *sigma_vxvy_file = "/usr/local/src/robot/event-driven/build/bin/sigmavxvy.scale.model";
+    const char *mu_vx_file = "/home/icub/Documents/event-driven/event-driven-shared/DATASETS/egomotiondataset/muvx.scale.model";
+    const char *mu_vy_file = "/home/icub/Documents/event-driven/event-driven-shared/DATASETS/egomotiondataset/muvy.scale.model";
+    const char *sigma_vx_file = "/home/icub/Documents/event-driven/event-driven-shared/DATASETS/egomotiondataset/sigmavx.scale.model";
+    const char *sigma_vy_file = "/home/icub/Documents/event-driven/event-driven-shared/DATASETS/egomotiondataset/sigmavy.scale.model";
+    const char *sigma_vxvy_file = "/home/icub/Documents/event-driven/event-driven-shared/DATASETS/egomotiondataset/sigmavxvy.scale.model";
 //    const char *mu_vx_file = "/home/vvasco/dev/libsvm-3.22/muvx.model";
 //    const char *mu_vy_file = "/home/vvasco/dev/libsvm-3.22/muvy.model";
 //    const char *sigma_vx_file = "/home/vvasco/dev/libsvm-3.22/sigmavx.model";

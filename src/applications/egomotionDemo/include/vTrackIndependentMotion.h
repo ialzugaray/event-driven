@@ -35,57 +35,62 @@ using namespace ev;
   VBOTTLE READER/PROCESSOR
   ////////////////////////////////////////////////////////////////////////////*/
 
-class positionReader : public yarp::os::BufferedPort<ev::vBottle>
-{
-private:
+//class positionReader : public yarp::os::BufferedPort<yarp::os::Bottle>
+//{
+//private:
 
-    yarp::sig::Vector target;
+//    yarp::sig::Vector target;
 
-public:
+//public:
 
-    positionReader()
-    {
-        target.resize(3);
+//    positionReader()
+//    {
+//        target.resize(2);
 
-        useCallback();
-    }
+//        useCallback();
+//    }
 
-    void onRead(vBottle &vBottleIn)
-    {
+//    void onRead(yarp::os::Bottle &BottleIn)
+//    {
 
-        //get the Q
-        vQueue q = vBottleIn.get<LabelledAE>();
-        if(q.empty()) {
-//            yWarning() << "q empty in callback function?";
-            return;
-        }
+//        //get the Q
+////        inputPort.read(BottleIn);
+////        target[0] = BottleIn.get(0).asInt();
+////        target[1] = BottleIn.get(1).asInt();
 
-        //update our current best position of the object
-        double cmx;
-        double cmy;
-        int count = 0;
-        for(ev::vQueue::iterator qi = q.begin(); qi != q.end(); qi++) {
-            auto v = is_event<LabelledAE>(*qi);
-            if(v->ID == 2) {
-                cmx += v->x;
-                cmy += 240 - v->y;
-                count++;
-            }
-        }
-        cmx /= count;
-        cmy /= count;
-        target[0] = cmx;
-        target[1] = cmy;
-        target[2] = count;
-    }
-
-    void getTarget(yarp::sig::Vector &target_)
-    {
-        target_ = target;
-    }
+////        vQueue q = vBottleIn.get<LabelledAE>();
+////        if(q.empty()) {
+//////            yWarning() << "q empty in callback function?";
+////            return;
+////        }
 
 
-};
+////        //update our current best position of the object
+////        double cmx;
+////        double cmy;
+////        int count = 0;
+////        for(ev::vQueue::iterator qi = q.begin(); qi != q.end(); qi++) {
+////            auto v = is_event<LabelledAE>(*qi);
+////            if(v->ID == 2) {
+////                cmx += v->x;
+////                cmy += 240 - v->y;
+////                count++;
+////            }
+////        }
+////        cmx /= count;
+////        cmy /= count;
+////        target[0] = cmx;
+////        target[1] = cmy;
+////        target[2] = count;
+//    }
+
+//    void getTarget(yarp::sig::Vector &target_)
+//    {
+//        target_ = target;
+//    }
+
+
+//};
 
 /*//////////////////////////////////////////////////////////////////////////////
   MODULE
@@ -97,7 +102,8 @@ private:
 
     ev::resolution res;
     //the event bottle input and output handler
-    positionReader inputPort;
+//    positionReader inputPort;
+    yarp::os::BufferedPort<yarp::os::Bottle> inputPort;
 
     //the remote procedure port
     yarp::os::RpcServer rpcPort;

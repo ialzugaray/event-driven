@@ -74,6 +74,13 @@ bool vTrackModule::configure(yarp::os::ResourceFinder &rf)
     if(gazedriver.isValid()) {
         gazedriver.view(gazecontrol);
         gazecontrol->getHeadPose(headhomepos, headhomerot);
+        gazecontrol->setEyesTrajTime(1.0);
+//        gazecontrol->blockNeckPitch();
+//        gazecontrol->blockNeckRoll();
+//        gazecontrol->blockNeckYaw();
+//        gazecontrol->setNeckTrajTime(1.5);
+
+
     } else {
         yWarning() << "Gaze Driver not opened and will not be used";
     }
@@ -89,29 +96,28 @@ bool vTrackModule::updateModule()
         htimeout = yarp::os::Time::now();
     }
 
-
     yarp::sig::Vector target;
-    inputPort.getTarget(target);
-
-    if(target[2] <= 3) {
-//        std::cout << "Weak signal " << std::endl;
-        return true;
+    yarp::os::Bottle *botIn = inputPort.read();
+    target.resize(botIn->size());
+    if(!botIn->isNull()) {
+        target[0] = botIn->get(0).asInt();
+        target[1] = botIn->get(1).asInt();
     }
 
+//    inputPort.getTarget(target);
+
+    std::cout << target[0] << " " << target[1] << " " << std::endl;
+
     if(!gazingActive || !gazedriver.isValid()) {
-        //yInfo() << "Gaze valid (gazing blocked)";
+        yInfo() << "Gaze valid (gazing blocked)";
         return true;
     }
 
     htimeout = yarp::os::Time::now();
 
     yInfo() << "Doing gaze";
-    yarp::sig::Vector tp;
-
-//    if(tp[0] < -0.10) {
-    std::cout << target[0] << " " << target[1] << " " << target[2] << std::endl;
-    gazecontrol->lookAtMonoPixel(0, target, 0.5);
-//    }
+    gazecontrol->lookAtMonoPixel(1, target, 1.0);
+//    gazecontrol->waitMotionDone();
 
     return !isStopping();
 }

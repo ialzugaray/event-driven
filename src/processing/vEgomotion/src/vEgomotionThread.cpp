@@ -125,7 +125,7 @@ vEgomotionThread::vEgomotionThread(std::string name, bool train, double thresh_m
 //    else {
 
         yInfo("STARTING TESTING...");
-        yInfo("Models are loaded from: " + folder);
+        //yInfo("Models are loaded from: " + folder);
 
         //load the trained models
         mu_vx = svm_load_model(mu_vx_file);
