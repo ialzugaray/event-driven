@@ -232,7 +232,12 @@ public:
 
 class boundingDraw : public vDraw {
 
+    yarp::os::BufferedPort< yarp::os::Bottle > targetCenterPort;
+
 public:
+
+    void initialise();
+    void close();
 
     static const std::string drawtype;
     virtual void draw(cv::Mat &image, const ev::vQueue &eSet, int vTime);

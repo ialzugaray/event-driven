@@ -873,6 +873,11 @@ std::string boundingDraw::getEventType()
     return LabelledAE::tag;
 }
 
+void boundingDraw::initialise()
+{
+    targetCenterPort.open("/vFramer/target:o");
+}
+
 void boundingDraw::draw(cv::Mat &image, const ev::vQueue &eSet, int vTime)
 {
 
@@ -995,10 +1000,21 @@ void boundingDraw::draw(cv::Mat &image, const ev::vQueue &eSet, int vTime)
         //we determine the bounding box around the polygon
         CvScalar color = CV_RGB(0, 255, 255);
         cv::Rect boundRect = cv::boundingRect( cv::Mat(contours_poly) );
+        cv::Point center = cv::Point(boundRect.x + boundRect.width/2, boundRect.y + boundRect.height/2);
         cv::rectangle( image, boundRect.tl(), boundRect.br(), color , thickness);
+        cv::circle(image, center, 5, color, CV_FILLED);
+
+        yarp::os::Bottle &target = targetCenterPort.prepare();
+        target.clear();
+        target.addInt(center.x);
+        target.addInt(center.y);
+        targetCenterPort.write();
     }
 
 }
 
-
+void boundingDraw::close()
+{
+    targetCenterPort.close();
+}
 
