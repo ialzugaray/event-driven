@@ -74,10 +74,10 @@ bool vTrackModule::configure(yarp::os::ResourceFinder &rf)
     if(gazedriver.isValid()) {
         gazedriver.view(gazecontrol);
         gazecontrol->getHeadPose(headhomepos, headhomerot);
-        gazecontrol->setEyesTrajTime(1.0);
-//        gazecontrol->blockNeckPitch();
-//        gazecontrol->blockNeckRoll();
-//        gazecontrol->blockNeckYaw();
+//        gazecontrol->setEyesTrajTime(1.0);
+        gazecontrol->blockNeckPitch();
+        gazecontrol->blockNeckRoll();
+        gazecontrol->blockNeckYaw();
 //        gazecontrol->setNeckTrajTime(1.5);
 
 
@@ -106,7 +106,7 @@ bool vTrackModule::updateModule()
 
 //    inputPort.getTarget(target);
 
-    std::cout << target[0] << " " << target[1] << " " << std::endl;
+//    std::cout << target[0] << " " << target[1] << " " << std::endl;
 
     if(!gazingActive || !gazedriver.isValid()) {
         yInfo() << "Gaze valid (gazing blocked)";
@@ -116,7 +116,7 @@ bool vTrackModule::updateModule()
     htimeout = yarp::os::Time::now();
 
     yInfo() << "Doing gaze";
-    gazecontrol->lookAtMonoPixel(1, target, 1.0);
+    gazecontrol->lookAtMonoPixelSync(1, target, 1.0);
 //    gazecontrol->waitMotionDone();
 
     return !isStopping();
