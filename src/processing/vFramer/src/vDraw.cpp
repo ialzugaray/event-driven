@@ -990,6 +990,7 @@ void boundingDraw::draw(cv::Mat &image, const ev::vQueue &eSet, int vTime)
 
     //if we have enough inliers
     int thickness = 2;
+    int bbcx = 0, bbcy = 0, xtl = 0, ytl = 0, xtr = 0, ytr = 0, xbl = 0, ybl = 0, xbr = 0, ybr = 0;
     if(pointsToTrack.size() > 3) {
 
         //we fit a polygon to the points
@@ -1004,12 +1005,32 @@ void boundingDraw::draw(cv::Mat &image, const ev::vQueue &eSet, int vTime)
         cv::rectangle( image, boundRect.tl(), boundRect.br(), color , thickness);
         cv::circle(image, center, 5, color, CV_FILLED);
 
+        bbcx = center.x;
+        bbcy = center.y;
+        xtl = boundRect.tl().x;
+        ytl = boundRect.tl().y;
+        xbr = boundRect.br().x;
+        ybr = boundRect.br().y;
+        xtr = boundRect.tl().x + boundRect.width;
+        ytr = ytl;
+        xbl = xbr;
+        ybl = boundRect.tl().y - boundRect.height;
+
         yarp::os::Bottle &target = targetCenterPort.prepare();
         target.clear();
-        target.addInt(center.x);
-        target.addInt(center.y);
+        target.addInt(bbcx);
+        target.addInt(bbcy);
+        target.addInt(xtl);
+        target.addInt(ytl);
+        target.addInt(xbr);
+        target.addInt(ybr);
+        target.addInt(xtr);
+        target.addInt(ytr);
+        target.addInt(xbl);
+        target.addInt(ybl);
         targetCenterPort.write();
     }
+
 
 }
 

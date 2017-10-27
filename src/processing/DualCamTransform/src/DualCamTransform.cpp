@@ -120,6 +120,24 @@ bool DualCamTransformModule::updateModule() {
     }
     
     if (rightImageCollector.isImageReady()){
+
+//        yarp::os::Bottle *boxIn = boxPortIn.read();
+        yarp::os::Bottle boxIn = boxCollector.getBox();
+        int xtl = 0, ytl = 0, xtr = 0, ytr = 0, xbl = 0, ybl = 0, xbr = 0, ybr = 0;
+        if(!boxIn.isNull()) {
+            xtl = boxIn.get(2).asInt();
+            ytl = boxIn.get(3).asInt();
+
+            xbr = boxIn.get(4).asInt();
+            ybr = boxIn.get(5).asInt();
+
+            xtr = boxIn.get(6).asInt();
+            ytr = boxIn.get(7).asInt();
+
+            xbl = boxIn.get(8).asInt();
+            ybl = boxIn.get(9).asInt();
+        }
+
         yarp::sig::ImageOf<yarp::sig::PixelBgr> &rightCanvas = rightImagePortOut.prepare();
         rightCanvas.resize(rightCanvasWidth,rightCanvasHeight);
         rightCanvas.zero();
@@ -131,6 +149,12 @@ bool DualCamTransformModule::updateModule() {
         }
         ev::vQueue vRightQueue = eventCollector.getEventsFromChannel(1);
         transform( rightCanvas, vRightQueue, rightH, rightXOffset, rightYOffset );
+
+        cv::Point topleft, bottomright;
+        getMappedBox(rightH, xtl, ytl, xbr, ybr, xtr, ytr, xbl, ybl, topleft, bottomright, rightXOffset, rightYOffset);
+
+        cv::Mat imOut((IplImage*)rightCanvas.getIplImage(),false);
+        cv::rectangle(imOut, topleft, bottomright, CV_RGB(0, 255, 255) , 2);
         rightImagePortOut.write();
     }
     
@@ -141,6 +165,9 @@ bool DualCamTransformModule::updateModule() {
 
 void DualCamTransformModule::transform( yarp::sig::ImageOf<yarp::sig::PixelBgr> &img, const vQueue &vQueue
                                         , const yarp::sig::Matrix &homography, int xOffset, int yOffset ) {
+
+    int xhack = -50;
+    int yhack = 50;
     ev::vBottle &outBottle = vPortOut.prepare();
     outBottle.clear();
     for ( auto &it : vQueue ) {
@@ -160,8 +187,8 @@ void DualCamTransformModule::transform( yarp::sig::ImageOf<yarp::sig::PixelBgr> 
         evCoord *= homography;
         
         //Converting back from homogenous coordinates
-        x = (evCoord[0] / evCoord[2]) + xOffset + 1;
-        y = (evCoord[1] / evCoord[2]) + yOffset + 1;
+        x = (evCoord[0] / evCoord[2]) + xOffset + 1 + xhack;
+        y = (evCoord[1] / evCoord[2]) + yOffset + 1 + yhack;
         
         //Drawing event on img
         bool inBound = x >= 0 && x < img.width() && y >= 0 && y < img.height();
@@ -179,6 +206,55 @@ void DualCamTransformModule::transform( yarp::sig::ImageOf<yarp::sig::PixelBgr> 
 //        vPortOut.setEnvelope(vQueue.back()->stamp);
         vPortOut.write();
     }
+}
+
+void DualCamTransformModule::getMappedBox(const yarp::sig::Matrix &homography,
+                                          int xtl, int ytl, int xbr, int ybr, int xtr, int ytr, int xbl, int ybl,
+                                          cv::Point &topleft, cv::Point &bottomright,
+                                          int xOffset, int yOffset) const {
+    int xhack = -50;
+    int yhack = 50;
+
+    //Transform the coordinates of top-left and bottom-right corners of the box
+    yarp::sig::Vector topLCorn( 3 );
+    topLCorn[0] = xtl;
+    topLCorn[1] = ytl;
+    topLCorn[2] = 1;
+
+    topLCorn *= homography;
+    xtl = (topLCorn[0] / topLCorn[2]) + xOffset + 1 + xhack;
+    ytl = (topLCorn[1] / topLCorn[2]) + yOffset + 1 + yhack;
+
+    yarp::sig::Vector botRCorn( 3 );
+    botRCorn[0] = xbr;
+    botRCorn[1] = ybr;
+    botRCorn[2] = 1;
+
+    botRCorn *= homography;
+    xbr = (botRCorn[0] / botRCorn[2]) + xOffset + 1 + xhack;
+    ybr = (botRCorn[1] / botRCorn[2]) + yOffset + 1 + yhack;
+
+    yarp::sig::Vector topRCorn( 3 );
+    topRCorn[0] = xtr;
+    topRCorn[1] = ytr;
+    topRCorn[2] = 1;
+
+    topRCorn *= homography;
+    xtr = (topRCorn[0] / topRCorn[2]) + xOffset + 1 + xhack;
+    ytr = (topRCorn[1] / topRCorn[2]) + yOffset + 1 + yhack;
+
+    yarp::sig::Vector botLCorn( 3 );
+    botLCorn[0] = xbl;
+    botLCorn[1] = ybl;
+    botLCorn[2] = 1;
+
+    botLCorn *= homography;
+    xbl = (botLCorn[0] / botLCorn[2]) + xOffset + 1 + xhack;
+    ybl = (botLCorn[1] / botLCorn[2]) + yOffset + 1 + yhack;
+
+    topleft = cv::Point(xtl, ytl);
+    bottomright = cv::Point(xbr, ybr);
+
 }
 
 void DualCamTransformModule::finalizeCalibration( yarp::sig::Matrix &homography, std::string groupName) {
@@ -365,12 +441,14 @@ bool DualCamTransformModule::configure( yarp::os::ResourceFinder &rf ) {
     leftImageCollector.open(getName("/left/img:i"));
     rightImageCollector.open(getName("/right/img:i"));
     eventCollector.open(getName("/vBottle:i"));
+    boxCollector.open(getName("/box:i"));
     leftImagePortOut.open(getName("/left/img:o"));
     rightImagePortOut.open(getName("/right/img:o"));
     vPortOut.open(getName("/vBottle:o"));
     eventCollector.start();
     leftImageCollector.start();
     rightImageCollector.start();
+    boxCollector.start();
     return true;
 }
 
@@ -405,6 +483,7 @@ bool DualCamTransformModule::interruptModule() {
     leftImageCollector.interrupt();
     vLeftImageCollector.interrupt();
     eventCollector.interrupt();
+    boxCollector.interrupt();
     return true;
 }
 
@@ -413,6 +492,7 @@ bool DualCamTransformModule::close() {
     leftImageCollector.close();
     vLeftImageCollector.close();
     eventCollector.close();
+    boxCollector.close();
     return true;
 }
 
@@ -435,6 +515,23 @@ void ImagePort::onRead( yarp::sig::ImageOf<yarp::sig::PixelBgr> &inImg ){
     mutex.lock();
     image = inImg;
     imageReady = true;
+    mutex.unlock();
+}
+
+/**************************BoxPort*********************************/
+
+yarp::os::Bottle BoxPort::getBox(){
+    yarp::os::Bottle outBox;
+    mutex.lock();
+    outBox = box;
+    box.clear();
+    mutex.unlock();
+    return outBox;
+}
+
+void BoxPort::onRead( yarp::os::Bottle &inBox ){
+    mutex.lock();
+    box = inBox;
     mutex.unlock();
 }
 

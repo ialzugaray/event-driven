@@ -44,6 +44,31 @@ public:
     ev::vQueue getEventsFromChannel(int channel);
 };
 
+class BoxPort : public yarp::os::BufferedPort<yarp::os::Bottle > {
+
+private:
+    yarp::os::Bottle box;
+    yarp::os::Mutex mutex;
+public:
+
+    BoxPort() { this->useCallback(); }
+    virtual void onRead( yarp::os::Bottle &inBox );
+    yarp::os::Bottle getBox();
+
+};
+
+class BoxCollector : public yarp::os::Thread {
+private:
+    BoxPort boxPort;
+public:
+    bool open (const std::string &name) { return boxPort.open(name); }
+    void close() { boxPort.close();}
+    void interrupt() { boxPort.interrupt(); }
+    yarp::os::Bottle getBox() {return boxPort.getBox(); }
+    void run(){}
+};
+
+
 class ImagePort : public yarp::os::BufferedPort<yarp::sig::ImageOf<yarp::sig::PixelBgr> > {
 
 private:
@@ -119,6 +144,10 @@ private :
     int leftYOffset;
     int rightXOffset;
     int rightYOffset;
+
+    //port for reading the bounding box
+//    yarp::os::BufferedPort < yarp::os::Bottle > boxPortIn;
+    BoxCollector boxCollector;
     
     
 public :
@@ -145,6 +174,12 @@ public :
     
     void getCanvasSize( const yarp::sig::Matrix &homography, int &canvasWidth, int &canvasHeight, int &xOffset
                             , int &yOffset ) const;
+
+    void getMappedBox(const yarp::sig::Matrix &homography,
+                      int xtl, int ytl, int xbr, int ybr,
+                      int xtr, int ytr , int xbl, int ybl,
+                      cv::Point &topleft, cv::Point &bottomright,
+                      int xOffset, int yOffset) const;
 };
 
 

@@ -122,6 +122,12 @@
     </connection>
 
     <connection>
+        <from>/imageEnhance/image:o</from>
+        <to>/DualCamTransform/right/img:i</to>
+        <protocol>udp</protocol>
+    </connection>
+
+    <connection>
         <from>/DualCamTransform/left/img:o</from>
         <to>/transformed/left</to>
         <protocol>udp</protocol>
@@ -130,6 +136,12 @@
     <connection>
         <from>/DualCamTransform/right/img:o</from>
         <to>/transformed/right</to>
+        <protocol>udp</protocol>
+    </connection>
+
+    <connection>
+        <from>/vFramer/target:o</from>
+        <to>/DualCamTransform/box:i</to>
         <protocol>udp</protocol>
     </connection>
 
